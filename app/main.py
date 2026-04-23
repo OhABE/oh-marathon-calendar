@@ -66,8 +66,11 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         query += ' AND e.region = ?'
         params.append(region)
     if distance:
-        query += ' AND e.distance = ?'
-        params.append(distance)
+        if distance == 'その他':
+            query += " AND e.distance NOT IN ('フル', 'ハーフ')"
+        else:
+            query += ' AND e.distance = ?'
+            params.append(distance)
     if pref:
         query += ' AND e.prefecture = ?'
         params.append(pref)
