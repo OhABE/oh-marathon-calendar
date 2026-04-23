@@ -40,6 +40,7 @@
     <div class="header-actions">
       <button onclick="openAddModal()" class="btn-add">＋ 大会を追加</button>
       <button onclick="runScrape()" class="btn-scrape">🔄 自動取得</button>
+      <button onclick="openCalModal()" class="btn-cal">📅 カレンダー連携</button>
     </div>
   </section>
 
@@ -93,6 +94,11 @@
           {% if ev.entry_site %}<span class="entry-site-label">{{ ev.entry_site }}</span>{% endif %}
         </a>
         {% endif %}
+
+        <!-- Googleカレンダーに追加 -->
+        <a href="{{ gcal_url(ev) }}" target="_blank" rel="noopener" class="btn-gcal">
+          📅 Googleカレンダーに追加
+        </a>
 
         <!-- 写真 -->
         {% if ev.photos %}
@@ -204,6 +210,42 @@
   </div>
 </div>
 <div id="overlay" class="overlay" style="display:none;" onclick="closeAddModal()"></div>
+
+<!-- カレンダー連携モーダル -->
+<div id="calModal" class="modal" style="display:none;">
+  <div class="modal-inner">
+    <h3>📅 Googleカレンダー連携</h3>
+
+    <div class="cal-section">
+      <h4>① 全大会をGoogleカレンダーに追加</h4>
+      <p class="cal-desc">すべての確定大会を購読できます。新しい大会が追加されると自動で更新されます。</p>
+      <div class="cal-steps">
+        <p>1. Googleカレンダーを開く</p>
+        <p>2. 左の「他のカレンダー」の「＋」をクリック</p>
+        <p>3. 「URLで追加」を選択</p>
+        <p>4. 以下のURLを貼り付ける</p>
+      </div>
+      <div class="cal-url-box">
+        <code id="allCalUrl">{{ request.base_url }}calendar.ics</code>
+        <button onclick="copyUrl('allCalUrl')" class="btn-copy">コピー</button>
+      </div>
+    </div>
+
+    <div class="cal-section">
+      <h4>② 参加予定の大会だけをGoogleカレンダーに追加</h4>
+      <p class="cal-desc">「エントリー済み」「参加予定」に設定した大会だけ表示されます。</p>
+      <div class="cal-url-box">
+        <code id="myCalUrl">{{ request.base_url }}my-calendar.ics</code>
+        <button onclick="copyUrl('myCalUrl')" class="btn-copy">コピー</button>
+      </div>
+    </div>
+
+    <div class="modal-buttons">
+      <button type="button" onclick="closeCalModal()" class="btn-reset">閉じる</button>
+    </div>
+  </div>
+</div>
+<div id="calOverlay" class="overlay" style="display:none;" onclick="closeCalModal()"></div>
 
 <!-- 写真ライトボックス -->
 <div id="lightbox" class="lightbox" style="display:none;" onclick="this.style.display='none'">

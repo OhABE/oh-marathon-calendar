@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Form, File, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -73,6 +73,22 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
 
     today = datetime.now().strftime('%Y-%m-%d')
 
+    def gcal_url(ev):
+        date = (ev.get('date') or '').replace('-', '')
+        if not date:
+            return '#'
+        name = ev.get('name', '')
+        loc = ev.get('venue') or ev.get('prefecture') or ''
+        details = f"距離: {ev.get('distance','')} / 参加費: {ev.get('fee','')} / 制限時間: {ev.get('time_limit','')}"
+        from urllib.parse import quote
+        return (
+            f"https://calendar.google.com/calendar/render?action=TEMPLATE"
+            f"&text={quote(name)}"
+            f"&dates={date}/{date}"
+            f"&location={quote(loc)}"
+            f"&details={quote(details)}"
+        )
+
     events = []
     for ev in events_raw:
         ev_dict = dict(ev)
@@ -95,7 +111,74 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         'selected_distance': distance,
         'selected_pref': pref,
         'today': today,
+        'gcal_url': gcal_url,
     })
+
+def make_ical(events, title='Oh!マラソンカレンダー'):
+    lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Oh!マラソンカレンダー//JP',
+        f'X-WR-CALNAME:{title}',
+        'X-WR-TIMEZONE:Asia/Tokyo',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+    ]
+    for ev in events:
+        date = ev['date'].replace('-', '') if ev.get('date') else ''
+        if not date:
+            continue
+        uid = f"marathon-{ev['id']}@oh-marathon-calendar"
+        summary = ev['name']
+        location = ev.get('venue') or ev.get('prefecture') or ''
+        desc_parts = []
+        if ev.get('distance'):   desc_parts.append(f"距離: {ev['distance']}")
+        if ev.get('fee'):        desc_parts.append(f"参加費: {ev['fee']}")
+        if ev.get('time_limit'): desc_parts.append(f"制限時間: {ev['time_limit']}")
+        if ev.get('entry_end'):  desc_parts.append(f"エントリー締切: {ev['entry_end']}")
+        if ev.get('url'):        desc_parts.append(f"公式サイト: {ev['url']}")
+        description = '\\n'.join(desc_parts)
+        now = datetime.now().strftime('%Y%m%dT%H%M%SZ')
+        lines += [
+            'BEGIN:VEVENT',
+            f'UID:{uid}',
+            f'DTSTAMP:{now}',
+            f'DTSTART;VALUE=DATE:{date}',
+            f'DTEND;VALUE=DATE:{date}',
+            f'SUMMARY:{summary}',
+            f'LOCATION:{location}',
+            f'DESCRIPTION:{description}',
+            'END:VEVENT',
+        ]
+    lines.append('END:VCALENDAR')
+    return '\r\n'.join(lines)
+
+@app.get('/calendar.ics')
+def calendar_ics():
+    """全確定大会のiCalフィード"""
+    db = get_db()
+    events = [dict(r) for r in db.execute(
+        'SELECT * FROM events WHERE confirmed=1 ORDER BY date ASC'
+    ).fetchall()]
+    db.close()
+    content = make_ical(events, 'Oh!マラソンカレンダー（全大会）')
+    return Response(content=content, media_type='text/calendar; charset=utf-8',
+                    headers={'Content-Disposition': 'attachment; filename=marathon.ics'})
+
+@app.get('/my-calendar.ics')
+def my_calendar_ics():
+    """参加予定・エントリー済みの大会のみのiCalフィード"""
+    db = get_db()
+    events = [dict(r) for r in db.execute('''
+        SELECT e.* FROM events e
+        JOIN user_progress p ON e.id = p.event_id
+        WHERE e.confirmed=1 AND p.status IN ('entered','planning','running','finished')
+        ORDER BY e.date ASC
+    ''').fetchall()]
+    db.close()
+    content = make_ical(events, 'Oh!マイマラソン（参加予定）')
+    return Response(content=content, media_type='text/calendar; charset=utf-8',
+                    headers={'Content-Disposition': 'attachment; filename=my-marathon.ics'})
 
 @app.post('/progress/{event_id}')
 def update_progress(event_id: int, status: str = Form(''), memo: str = Form(''), finish_time: str = Form('')):

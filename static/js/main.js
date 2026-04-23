@@ -6,6 +6,18 @@ function closeAddModal() {
   document.getElementById('addModal').style.display = 'none';
   document.getElementById('overlay').style.display = 'none';
 }
+function openCalModal() {
+  document.getElementById('calModal').style.display = 'block';
+  document.getElementById('calOverlay').style.display = 'block';
+}
+function closeCalModal() {
+  document.getElementById('calModal').style.display = 'none';
+  document.getElementById('calOverlay').style.display = 'none';
+}
+function copyUrl(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('URLをコピーしました！'));
+}
 
 function togglePhotoForm(eventId) {
   const form = document.getElementById('photo-form-' + eventId);
