@@ -1,10 +1,9 @@
-from fastapi import FastAPI, Request, Form, File, UploadFile, Cookie
+from fastapi import FastAPI, Request, Form, Cookie
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
-import uuid
 import sqlite3
 from datetime import datetime
 
@@ -12,13 +11,10 @@ from .database import init_db, get_db
 from .scraper import run_scrape, seed_confirmed_data
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
 ADMIN_PIN = os.environ.get('ADMIN_PIN', '0427')  # デフォルトは佐伯番匠の日
 
 def is_admin(request: Request) -> bool:
     return request.cookies.get('admin_token') == ADMIN_PIN
-ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 app = FastAPI(title='Oh!マラソンカレンダー')
 app.mount('/static', StaticFiles(directory=os.path.join(BASE_DIR, 'static')), name='static')
@@ -102,8 +98,6 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
             ev_dict.get('date', ''),
             today
         )
-        photos = db.execute('SELECT * FROM event_photos WHERE event_id = ? ORDER BY uploaded_at DESC', (ev_dict['id'],)).fetchall()
-        ev_dict['photos'] = [dict(p) for p in photos]
         events.append(ev_dict)
 
     db.close()
@@ -204,41 +198,6 @@ def update_progress(request: Request, event_id: int, status: str = Form(''), mem
     db.close()
     return RedirectResponse('/', status_code=303)
 
-@app.post('/photos/upload/{event_id}')
-async def upload_photo(request: Request, event_id: int, file: UploadFile = File(...), caption: str = Form('')):
-    if not is_admin(request):
-        return RedirectResponse('/', status_code=303)
-    ext = os.path.splitext(file.filename or '')[1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        return JSONResponse({'error': '画像ファイル（JPG/PNG/GIF）のみアップロードできます'}, status_code=400)
-    content = await file.read()
-    if len(content) > MAX_FILE_SIZE:
-        return JSONResponse({'error': 'ファイルサイズは5MB以内にしてください'}, status_code=400)
-    filename = f'{event_id}_{uuid.uuid4().hex}{ext}'
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    with open(filepath, 'wb') as f:
-        f.write(content)
-    db = get_db()
-    db.execute('INSERT INTO event_photos (event_id, filename, caption) VALUES (?, ?, ?)',
-               (event_id, filename, caption))
-    db.commit()
-    db.close()
-    return RedirectResponse('/', status_code=303)
-
-@app.post('/photos/delete/{photo_id}')
-def delete_photo(request: Request, photo_id: int):
-    if not is_admin(request):
-        return RedirectResponse('/', status_code=303)
-    db = get_db()
-    photo = db.execute('SELECT filename FROM event_photos WHERE id = ?', (photo_id,)).fetchone()
-    if photo:
-        filepath = os.path.join(UPLOAD_DIR, photo['filename'])
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        db.execute('DELETE FROM event_photos WHERE id = ?', (photo_id,))
-        db.commit()
-    db.close()
-    return RedirectResponse('/', status_code=303)
 
 @app.post('/events/add')
 def add_event(

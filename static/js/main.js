@@ -27,16 +27,6 @@ function copyUrl(id) {
   navigator.clipboard.writeText(text).then(() => showToast('URLをコピーしました！'));
 }
 
-function togglePhotoForm(eventId) {
-  const form = document.getElementById('photo-form-' + eventId);
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-function openPhoto(src) {
-  const lb = document.getElementById('lightbox');
-  document.getElementById('lightbox-img').src = src;
-  lb.style.display = 'flex';
-}
 
 function runScrape() {
   const btn = document.querySelector('.btn-scrape');

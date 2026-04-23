@@ -203,18 +203,6 @@ header h1 { font-size: 2rem; font-weight: 900; letter-spacing: 1px; }
 .btn-copy { background: #1a73e8; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
 .btn-copy:hover { background: #1558b0; }
 
-/* Photos */
-.photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-.photo-item { position: relative; width: 80px; height: 80px; }
-.photo-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; transition: border-color 0.15s; }
-.photo-item img:hover { border-color: #e84393; }
-.photo-caption { font-size: 0.7rem; color: #888; text-align: center; margin-top: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 80px; }
-
-.photo-upload-section { margin-bottom: 10px; }
-.photo-form { margin-top: 8px; padding: 10px; background: #fafafa; border-radius: 8px; border: 1px solid #eee; }
-.compliance-note { font-size: 0.75rem; color: #e65100; background: #fff8f0; border: 1px solid #ffe0b2; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; line-height: 1.4; }
-.file-input { display: block; margin-bottom: 6px; font-size: 0.85rem; width: 100%; }
-.caption-input { display: block; width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem; margin-bottom: 6px; }
 
 /* Progress */
 .progress-section { border-top: 1px solid #f0f0f0; padding-top: 12px; }

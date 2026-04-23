@@ -111,35 +111,6 @@
           📅 Googleカレンダーに追加
         </a>
 
-        <!-- 写真 -->
-        {% if ev.photos %}
-        <div class="photo-gallery">
-          {% for photo in ev.photos %}
-          <div class="photo-item">
-            <img src="/static/uploads/{{ photo.filename }}" alt="{{ photo.caption or ev.name }}" onclick="openPhoto(this.src)">
-            {% if photo.caption %}<p class="photo-caption">{{ photo.caption }}</p>{% endif %}
-            <form method="post" action="/photos/delete/{{ photo.id }}" class="delete-photo-form">
-              <button type="submit" class="btn-delete-photo" onclick="return confirm('削除しますか？')">✕</button>
-            </form>
-          </div>
-          {% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- 写真アップロード（管理者のみ） -->
-        {% if is_admin %}
-        <div class="photo-upload-section">
-          <button class="btn-photo-toggle" onclick="togglePhotoForm({{ ev.id }})">📷 写真を追加</button>
-          <div id="photo-form-{{ ev.id }}" class="photo-form" style="display:none;">
-            <p class="compliance-note">※ 自分が撮影した写真、または投稿権限を持つ写真のみアップロードしてください。他者の著作権・肖像権に注意してください。</p>
-            <form method="post" action="/photos/upload/{{ ev.id }}" enctype="multipart/form-data">
-              <input type="file" name="file" accept="image/*" required class="file-input">
-              <input type="text" name="caption" placeholder="コメント（任意）" class="caption-input">
-              <button type="submit" class="btn-save">アップロード</button>
-            </form>
-          </div>
-        </div>
-        {% endif %}
 
         <!-- 進捗ステータス（全員が入力可能） -->
         <div class="progress-section">
@@ -277,11 +248,6 @@
   </div>
 </div>
 <div id="calOverlay" class="overlay" style="display:none;" onclick="closeCalModal()"></div>
-
-<!-- 写真ライトボックス -->
-<div id="lightbox" class="lightbox" style="display:none;" onclick="this.style.display='none'">
-  <img id="lightbox-img" src="" alt="">
-</div>
 
 <!-- トースト -->
 <div id="toast" class="toast" style="display:none;"></div>

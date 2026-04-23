@@ -42,14 +42,6 @@ def init_db():
             FOREIGN KEY (event_id) REFERENCES events(id)
         );
 
-        CREATE TABLE IF NOT EXISTS event_photos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            event_id INTEGER NOT NULL,
-            filename TEXT NOT NULL,
-            caption TEXT,
-            uploaded_at TEXT DEFAULT (datetime('now', 'localtime')),
-            FOREIGN KEY (event_id) REFERENCES events(id)
-        );
     ''')
     conn.commit()
     conn.close()
