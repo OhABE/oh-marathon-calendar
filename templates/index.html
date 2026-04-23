@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oh!マラソンカレンダー</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>🏃 Oh!マラソンカレンダー</h1>
+    <p class="subtitle">中国・九州エリアのマラソン・ハーフマラソン情報</p>
+  </div>
+</header>
+
+<main>
+  <!-- フィルター -->
+  <section class="filter-section">
+    <form method="get" action="/" class="filter-form">
+      <select name="region" onchange="this.form.submit()">
+        <option value="">エリア: すべて</option>
+        <option value="中国" {% if selected_region=='中国' %}selected{% endif %}>中国エリア</option>
+        <option value="九州" {% if selected_region=='九州' %}selected{% endif %}>九州エリア</option>
+      </select>
+      <select name="distance" onchange="this.form.submit()">
+        <option value="">距離: すべて</option>
+        <option value="フル" {% if selected_distance=='フル' %}selected{% endif %}>フルマラソン</option>
+        <option value="ハーフ" {% if selected_distance=='ハーフ' %}selected{% endif %}>ハーフマラソン</option>
+      </select>
+      <select name="pref" onchange="this.form.submit()">
+        <option value="">都道府県: すべて</option>
+        {% for p in prefs %}
+        <option value="{{ p.prefecture }}" {% if selected_pref==p.prefecture %}selected{% endif %}>{{ p.prefecture }}</option>
+        {% endfor %}
+      </select>
+      <a href="/" class="btn-reset">リセット</a>
+    </form>
+    <div class="header-actions">
+      <button onclick="openAddModal()" class="btn-add">＋ 大会を追加</button>
+      <button onclick="runScrape()" class="btn-scrape">🔄 自動取得</button>
+    </div>
+  </section>
+
+  <!-- イベント一覧 -->
+  <section class="events-section">
+    {% if events %}
+    <div class="events-grid">
+      {% for ev in events %}
+      <div class="event-card entry-{{ ev.entry_status }} user-{{ ev.status or 'none' }}">
+
+        <!-- ステータスバー（一番上に大きく表示） -->
+        <div class="entry-status-bar status-{{ ev.entry_status }}">
+          {% if ev.entry_status == 'open' %}
+          ✅ エントリー受付中
+          {% elif ev.entry_status == 'closed' %}
+          🔒 エントリー締切
+          {% elif ev.entry_status == 'finished' %}
+          🏁 開催済み
+          {% elif ev.entry_status == 'upcoming' %}
+          📢 エントリー近日開始
+          {% else %}
+          📋 情報確認中
+          {% endif %}
+        </div>
+
+        <div class="event-header">
+          <span class="badge-region {{ ev.region }}">{{ ev.region }}</span>
+          <span class="badge-distance">{{ ev.distance }}</span>
+          {% if ev.date == today %}
+          <span class="badge-today">🎉 本日開催！</span>
+          {% endif %}
+        </div>
+
+        <h2 class="event-name">
+          {% if ev.url %}<a href="{{ ev.url }}" target="_blank">{{ ev.name }}</a>{% else %}{{ ev.name }}{% endif %}
+        </h2>
+
+        <div class="event-meta">
+          <div class="meta-item">📅 <strong>{{ ev.date }}</strong></div>
+          <div class="meta-item">📍 {{ ev.prefecture }}{% if ev.venue %} / {{ ev.venue }}{% endif %}</div>
+          {% if ev.time_limit %}<div class="meta-item">⏱ 制限時間: <strong>{{ ev.time_limit }}</strong></div>{% endif %}
+          {% if ev.entry_start %}<div class="meta-item">📬 エントリー開始: {{ ev.entry_start }}</div>{% endif %}
+          {% if ev.entry_end %}<div class="meta-item">⏰ エントリー締切: {{ ev.entry_end }}</div>{% endif %}
+          {% if ev.fee %}<div class="meta-item">💴 参加費: {{ ev.fee }}</div>{% endif %}
+        </div>
+
+        <!-- 申し込みボタン -->
+        {% if ev.entry_url %}
+        <a href="{{ ev.entry_url }}" target="_blank" rel="noopener" class="btn-entry {% if ev.entry_status == 'open' %}btn-entry-open{% else %}btn-entry-closed{% endif %}">
+          📝 申し込みはこちら
+          {% if ev.entry_site %}<span class="entry-site-label">{{ ev.entry_site }}</span>{% endif %}
+        </a>
+        {% endif %}
+
+        <!-- 写真 -->
+        {% if ev.photos %}
+        <div class="photo-gallery">
+          {% for photo in ev.photos %}
+          <div class="photo-item">
+            <img src="/static/uploads/{{ photo.filename }}" alt="{{ photo.caption or ev.name }}" onclick="openPhoto(this.src)">
+            {% if photo.caption %}<p class="photo-caption">{{ photo.caption }}</p>{% endif %}
+            <form method="post" action="/photos/delete/{{ photo.id }}" class="delete-photo-form">
+              <button type="submit" class="btn-delete-photo" onclick="return confirm('削除しますか？')">✕</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- 写真アップロード -->
+        <div class="photo-upload-section">
+          <button class="btn-photo-toggle" onclick="togglePhotoForm({{ ev.id }})">📷 写真を追加</button>
+          <div id="photo-form-{{ ev.id }}" class="photo-form" style="display:none;">
+            <p class="compliance-note">※ 自分が撮影した写真、または投稿権限を持つ写真のみアップロードしてください。他者の著作権・肖像権に注意してください。</p>
+            <form method="post" action="/photos/upload/{{ ev.id }}" enctype="multipart/form-data">
+              <input type="file" name="file" accept="image/*" required class="file-input">
+              <input type="text" name="caption" placeholder="コメント（任意）" class="caption-input">
+              <button type="submit" class="btn-save">アップロード</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 進捗ステータス -->
+        <div class="progress-section">
+          <form method="post" action="/progress/{{ ev.id }}" class="progress-form">
+            <select name="status" class="status-select">
+              <option value="none" {% if not ev.status or ev.status=='none' %}selected{% endif %}>− 未設定</option>
+              <option value="checking" {% if ev.status=='checking' %}selected{% endif %}>👀 検討中</option>
+              <option value="entered" {% if ev.status=='entered' %}selected{% endif %}>✅ エントリー済み</option>
+              <option value="planning" {% if ev.status=='planning' %}selected{% endif %}>🏁 参加予定</option>
+              <option value="running" {% if ev.status=='running' %}selected{% endif %}>🏃 参加中</option>
+              <option value="finished" {% if ev.status=='finished' %}selected{% endif %}>🏆 完走！</option>
+              <option value="dns" {% if ev.status=='dns' %}selected{% endif %}>❌ DNS/DNF</option>
+            </select>
+            <input type="text" name="finish_time" placeholder="タイム (例: 2:05:30)" value="{{ ev.finish_time or '' }}" class="time-input">
+            <input type="text" name="memo" placeholder="メモ..." value="{{ ev.memo or '' }}" class="memo-input">
+            <button type="submit" class="btn-save">保存</button>
+          </form>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p>該当する大会が見つかりませんでした。</p></div>
+    {% endif %}
+  </section>
+</main>
+
+<!-- 大会追加モーダル -->
+<div id="addModal" class="modal" style="display:none;">
+  <div class="modal-inner">
+    <h3>大会を追加</h3>
+    <form method="post" action="/events/add">
+      <label>大会名 *<input type="text" name="name" required></label>
+      <label>開催日 *<input type="date" name="date" required></label>
+      <label>都道府県 *
+        <select name="prefecture" required>
+          <option value="">選択してください</option>
+          <optgroup label="中国エリア">
+            <option>鳥取</option><option>島根</option><option>岡山</option><option>広島</option><option>山口</option>
+          </optgroup>
+          <optgroup label="九州エリア">
+            <option>福岡</option><option>佐賀</option><option>長崎</option><option>熊本</option>
+            <option>大分</option><option>宮崎</option><option>鹿児島</option><option>沖縄</option>
+          </optgroup>
+        </select>
+      </label>
+      <label>エリア *
+        <select name="region" required>
+          <option value="中国">中国</option>
+          <option value="九州" selected>九州</option>
+        </select>
+      </label>
+      <label>距離 *
+        <select name="distance" required>
+          <option value="フル">フルマラソン</option>
+          <option value="ハーフ">ハーフマラソン</option>
+        </select>
+      </label>
+      <label>会場<input type="text" name="venue"></label>
+      <label>エントリー開始日<input type="date" name="entry_start"></label>
+      <label>エントリー締切日<input type="date" name="entry_end"></label>
+      <label>参加費<input type="text" name="fee" placeholder="例: 5,000円"></label>
+      <label>制限時間<input type="text" name="time_limit" placeholder="例: 6時間"></label>
+      <label>公式サイトURL<input type="url" name="url"></label>
+      <label>申し込みURL<input type="url" name="entry_url" placeholder="例: https://runnet.jp/..."></label>
+      <label>申し込みサイト名
+        <select name="entry_site">
+          <option value="">選択してください</option>
+          <option value="ランネット">ランネット</option>
+          <option value="スポーツエントリー">スポーツエントリー</option>
+          <option value="公式サイト">公式サイト</option>
+          <option value="その他">その他</option>
+        </select>
+      </label>
+      <div class="modal-buttons">
+        <button type="submit" class="btn-add">追加する</button>
+        <button type="button" onclick="closeAddModal()" class="btn-reset">キャンセル</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="overlay" class="overlay" style="display:none;" onclick="closeAddModal()"></div>
+
+<!-- 写真ライトボックス -->
+<div id="lightbox" class="lightbox" style="display:none;" onclick="this.style.display='none'">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- トースト -->
+<div id="toast" class="toast" style="display:none;"></div>
+
+<footer>
+  <p>Oh!マラソンカレンダー — 中国・九州エリアのランナーのために</p>
+</footer>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>
