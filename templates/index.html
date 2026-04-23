@@ -132,7 +132,7 @@
               <option value="planning" {% if ev.status=='planning' %}selected{% endif %}>🏁 参加予定</option>
               <option value="running" {% if ev.status=='running' %}selected{% endif %}>🏃 参加中</option>
               <option value="finished" {% if ev.status=='finished' %}selected{% endif %}>🏆 完走！</option>
-              <option value="dns" {% if ev.status=='dns' %}selected{% endif %}>❌ DNS/DNF</option>
+              <option value="dns" {% if ev.status=='dns' %}selected{% endif %}>😢 欠場・途中棄権</option>
             </select>
             <input type="text" name="finish_time" placeholder="タイム (例: 2:05:30)" value="{{ ev.finish_time or '' }}" class="time-input">
             <input type="text" name="memo" placeholder="メモ..." value="{{ ev.memo or '' }}" class="memo-input">
