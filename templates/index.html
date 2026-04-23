@@ -11,7 +11,7 @@
 <header>
   <div class="header-inner">
     <h1>🏃 Oh!マラソンカレンダー</h1>
-    <p class="subtitle">中国・九州エリアのマラソン・ハーフマラソン情報</p>
+    <p class="subtitle">中国・九州エリアのマラソン・ウルトラ・トレイルラン情報</p>
   </div>
 </header>
 
@@ -28,6 +28,8 @@
         <option value="">距離: すべて</option>
         <option value="フル" {% if selected_distance=='フル' %}selected{% endif %}>フルマラソン</option>
         <option value="ハーフ" {% if selected_distance=='ハーフ' %}selected{% endif %}>ハーフマラソン</option>
+        <option value="ウルトラ" {% if selected_distance=='ウルトラ' %}selected{% endif %}>ウルトラマラソン</option>
+        <option value="トレイル" {% if selected_distance=='トレイル' %}selected{% endif %}>トレイルラン</option>
       </select>
       <select name="pref" onchange="this.form.submit()">
         <option value="">都道府県: すべて</option>
@@ -117,6 +119,13 @@
         </a>
         {% endif %}
 
+        <!-- 管理者: 削除 -->
+        {% if is_admin %}
+        <form method="post" action="/admin/events/{{ ev.id }}/delete" onsubmit="return confirm('「{{ ev.name }}」を削除しますか？')">
+          <button type="submit" class="btn-delete">🗑 削除</button>
+        </form>
+        {% endif %}
+
         <!-- 管理者: YouTube URL手動設定 -->
         {% if is_admin %}
         <div class="yt-admin-row">
@@ -187,6 +196,8 @@
         <select name="distance" required>
           <option value="フル">フルマラソン</option>
           <option value="ハーフ">ハーフマラソン</option>
+          <option value="ウルトラ">ウルトラマラソン</option>
+          <option value="トレイル">トレイルラン</option>
         </select>
       </label>
       <label>会場<input type="text" name="venue"></label>

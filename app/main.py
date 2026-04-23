@@ -258,6 +258,17 @@ def set_youtube_url(request: Request, event_id: int, youtube_url: str = Form('')
     return RedirectResponse('/', status_code=303)
 
 
+@app.post('/admin/events/{event_id}/delete')
+def delete_event(request: Request, event_id: int):
+    if not is_admin(request):
+        return RedirectResponse('/', status_code=303)
+    db = get_db()
+    db.execute('DELETE FROM user_progress WHERE event_id = ?', (event_id,))
+    db.execute('DELETE FROM events WHERE id = ?', (event_id,))
+    db.commit()
+    db.close()
+    return RedirectResponse('/', status_code=303)
+
 @app.post('/scrape')
 def manual_scrape(request: Request):
     if not is_admin(request):
