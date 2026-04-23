@@ -73,7 +73,7 @@
           {% endif %}
         </div>
 
-        {% if ev.status in ['entered', 'planning', 'running', 'finished'] %}
+        {% if ev.by_admin and ev.status in ['entered', 'planning', 'running', 'finished'] %}
         <div class="abe-badge">📺 Oh!アベチャンネル参加</div>
         {% endif %}
 
@@ -126,8 +126,8 @@
         </div>
         {% endif %}
 
-        {% if is_admin %}
         <!-- 写真アップロード（管理者のみ） -->
+        {% if is_admin %}
         <div class="photo-upload-section">
           <button class="btn-photo-toggle" onclick="togglePhotoForm({{ ev.id }})">📷 写真を追加</button>
           <div id="photo-form-{{ ev.id }}" class="photo-form" style="display:none;">
@@ -139,8 +139,9 @@
             </form>
           </div>
         </div>
+        {% endif %}
 
-        <!-- 進捗ステータス（管理者のみ） -->
+        <!-- 進捗ステータス（全員が入力可能） -->
         <div class="progress-section">
           <form method="post" action="/progress/{{ ev.id }}" class="progress-form">
             <select name="status" class="status-select">
@@ -157,7 +158,6 @@
             <button type="submit" class="btn-save">保存</button>
           </form>
         </div>
-        {% endif %}
 
       </div>
       {% endfor %}

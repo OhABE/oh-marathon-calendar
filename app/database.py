@@ -37,6 +37,7 @@ def init_db():
             status TEXT DEFAULT 'none',
             memo TEXT,
             finish_time TEXT,
+            by_admin INTEGER DEFAULT 0,
             updated_at TEXT DEFAULT (datetime('now', 'localtime')),
             FOREIGN KEY (event_id) REFERENCES events(id)
         );

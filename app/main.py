@@ -56,7 +56,7 @@ def shutdown():
 def index(request: Request, region: str = '', distance: str = '', pref: str = ''):
     db = get_db()
     query = '''
-        SELECT e.*, p.status, p.memo, p.finish_time, p.id as progress_id
+        SELECT e.*, p.status, p.memo, p.finish_time, p.by_admin, p.id as progress_id
         FROM events e
         LEFT JOIN user_progress p ON e.id = p.event_id
         WHERE e.confirmed = 1
@@ -187,18 +187,19 @@ def my_calendar_ics():
 
 @app.post('/progress/{event_id}')
 def update_progress(request: Request, event_id: int, status: str = Form(''), memo: str = Form(''), finish_time: str = Form('')):
-    if not is_admin(request):
-        return RedirectResponse('/', status_code=303)
+    admin = 1 if is_admin(request) else 0
     db = get_db()
-    existing = db.execute('SELECT id FROM user_progress WHERE event_id = ?', (event_id,)).fetchone()
+    existing = db.execute('SELECT id, by_admin FROM user_progress WHERE event_id = ?', (event_id,)).fetchone()
     if existing:
+        # 管理者は常に上書き。一般ユーザーは管理者が入力済みの場合はby_adminを維持
+        new_by_admin = admin if admin else existing['by_admin']
         db.execute('''
-            UPDATE user_progress SET status=?, memo=?, finish_time=?, updated_at=datetime('now','localtime')
+            UPDATE user_progress SET status=?, memo=?, finish_time=?, by_admin=?, updated_at=datetime('now','localtime')
             WHERE event_id=?
-        ''', (status, memo, finish_time, event_id))
+        ''', (status, memo, finish_time, new_by_admin, event_id))
     else:
-        db.execute('INSERT INTO user_progress (event_id, status, memo, finish_time) VALUES (?, ?, ?, ?)',
-                   (event_id, status, memo, finish_time))
+        db.execute('INSERT INTO user_progress (event_id, status, memo, finish_time, by_admin) VALUES (?, ?, ?, ?, ?)',
+                   (event_id, status, memo, finish_time, admin))
     db.commit()
     db.close()
     return RedirectResponse('/', status_code=303)
