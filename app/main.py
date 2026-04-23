@@ -59,6 +59,7 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         FROM events e
         LEFT JOIN user_progress p ON e.id = p.event_id
         WHERE e.confirmed = 1
+        AND e.date >= date('now', '-1 year', 'localtime')
     '''
     params = []
     if region:
@@ -257,6 +258,33 @@ def set_youtube_url(request: Request, event_id: int, youtube_url: str = Form('')
     db.close()
     return RedirectResponse('/', status_code=303)
 
+
+@app.post('/admin/events/{event_id}/edit')
+def edit_event(
+    request: Request,
+    event_id: int,
+    name: str = Form(...), date: str = Form(...), prefecture: str = Form(...),
+    region: str = Form(...), distance: str = Form(...), venue: str = Form(''),
+    entry_start: str = Form(''), entry_end: str = Form(''),
+    fee: str = Form(''), time_limit: str = Form(''), url: str = Form(''),
+    entry_url: str = Form(''), entry_site: str = Form(''),
+    confirmed: str = Form('1')
+):
+    if not is_admin(request):
+        return RedirectResponse('/', status_code=303)
+    db = get_db()
+    db.execute('''
+        UPDATE events SET name=?, date=?, prefecture=?, region=?, distance=?, venue=?,
+        entry_start=?, entry_end=?, fee=?, time_limit=?, url=?, entry_url=?, entry_site=?,
+        confirmed=?
+        WHERE id=?
+    ''', (name, date, prefecture, region, distance, venue,
+          entry_start or None, entry_end or None, fee, time_limit, url, entry_url, entry_site,
+          1 if confirmed == '1' else 0,
+          event_id))
+    db.commit()
+    db.close()
+    return RedirectResponse('/', status_code=303)
 
 @app.post('/admin/events/{event_id}/delete')
 def delete_event(request: Request, event_id: int):

@@ -15,6 +15,8 @@ KYUSHU_PREFS  = {'福岡': '40', '佐賀': '41', '長崎': '42', '熊本': '43',
 ALL_PREFS = {**CHUGOKU_PREFS, **KYUSHU_PREFS}
 
 WHEELCHAIR_KEYWORDS = ['車いす', '車椅子', 'wheelchair', 'チェア', 'ウォーク', 'ウオーク', '歩こう']
+TRAIL_KEYWORDS = ['トレイル', 'trail', 'Trail', 'TRAIL', '山岳', '縦走']
+ULTRA_KEYWORDS = ['ウルトラ', 'ultra', 'Ultra', 'ULTRA']
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -23,6 +25,24 @@ HEADERS = {
 
 def is_excluded(name):
     return any(kw in name for kw in WHEELCHAIR_KEYWORDS)
+
+def is_trail(name):
+    return any(kw in name for kw in TRAIL_KEYWORDS)
+
+def is_ultra(name):
+    return any(kw in name for kw in ULTRA_KEYWORDS) or bool(re.search(r'[6-9]\d\s*km|[1-9]\d{2}\s*km', name, re.IGNORECASE))
+
+def is_trail_or_ultra(name):
+    return is_trail(name) or is_ultra(name)
+
+def detect_distance(name):
+    if is_trail(name):
+        return 'トレイル'
+    if is_ultra(name):
+        return 'ウルトラ'
+    if 'ハーフ' in name:
+        return 'ハーフ'
+    return 'フル'
 
 def is_confirmed(ev):
     """必須項目が揃っていて要確認でないイベントのみ確定とする"""
@@ -87,60 +107,71 @@ def scrape_runnet_detail(detail_url):
         print(f'[scraper] detail error {detail_url}: {e}')
     return info
 
+def _scrape_runnet_links(search_url, pref_name, pref_code, region, name_filter=None):
+    """RunNET検索URLから大会リストを取得して返す"""
+    events = []
+    try:
+        res = requests.get(search_url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        race_links = soup.select('a[href*="raceId="], a[href*="race_id="]')
+        seen = set()
+        for link in race_links:
+            href = link.get('href', '')
+            name = link.get_text(strip=True)
+            if not name or len(name) < 3:
+                continue
+            if is_excluded(name):
+                continue
+            if href in seen:
+                continue
+            if name_filter and not name_filter(name):
+                continue
+            seen.add(href)
+            detail_url = href if href.startswith('http') else 'https://runnet.jp' + href
+            detail = scrape_runnet_detail(detail_url)
+            time.sleep(1.5)
+            ev = {
+                'name': name,
+                'date': detail.get('date', ''),
+                'prefecture': pref_name,
+                'region': region,
+                'distance': detect_distance(name),
+                'venue': detail.get('venue', ''),
+                'entry_start': detail.get('entry_start', ''),
+                'entry_end': detail.get('entry_end', ''),
+                'fee': detail.get('fee', ''),
+                'time_limit': detail.get('time_limit', ''),
+                'url': detail_url,
+                'entry_url': detail_url,
+                'entry_site': 'ランネット',
+                'source': 'runnet',
+            }
+            events.append(ev)
+        time.sleep(2)
+    except Exception as e:
+        print(f'[scraper] search error {pref_name}: {e}')
+    return events
+
+
 def scrape_runnet():
     events = []
     for pref_name, pref_code in ALL_PREFS.items():
         region = '中国' if pref_name in CHUGOKU_PREFS else '九州'
-        for distance_label, dist_id in [('フル', '1'), ('ハーフ', '2')]:
-            search_url = (
+
+        # フル・ハーフ
+        for dist_id in ['1', '2']:
+            url = (
                 f'https://runnet.jp/entry/runtes/user/pc/RaceSearchZZSDetailAction.do'
                 f'?command=search&prefectureIds={pref_code}&distanceIds={dist_id}&statusIds=1&statusIds=2'
             )
-            try:
-                res = requests.get(search_url, headers=HEADERS, timeout=15)
-                soup = BeautifulSoup(res.text, 'html.parser')
+            events += _scrape_runnet_links(url, pref_name, pref_code, region)
 
-                # 大会リストを取得
-                race_links = soup.select('a[href*="raceId="], a[href*="race_id="]')
-                seen = set()
-                for link in race_links:
-                    href = link.get('href', '')
-                    name = link.get_text(strip=True)
-                    if not name or len(name) < 3:
-                        continue
-                    if is_excluded(name):
-                        continue
-                    if href in seen:
-                        continue
-                    seen.add(href)
-
-                    detail_url = href if href.startswith('http') else 'https://runnet.jp' + href
-
-                    # 詳細ページから情報取得
-                    detail = scrape_runnet_detail(detail_url)
-                    time.sleep(1.5)
-
-                    ev = {
-                        'name': name,
-                        'date': detail.get('date', ''),
-                        'prefecture': pref_name,
-                        'region': region,
-                        'distance': distance_label,
-                        'venue': detail.get('venue', ''),
-                        'entry_start': detail.get('entry_start', ''),
-                        'entry_end': detail.get('entry_end', ''),
-                        'fee': detail.get('fee', ''),
-                        'time_limit': detail.get('time_limit', ''),
-                        'url': detail_url,
-                        'entry_url': detail_url,
-                        'entry_site': 'ランネット',
-                        'source': 'runnet',
-                    }
-                    events.append(ev)
-
-                time.sleep(2)
-            except Exception as e:
-                print(f'[scraper] search error {pref_name} {distance_label}: {e}')
+        # ウルトラ・トレイル（名称でフィルタ）
+        trail_url = (
+            f'https://runnet.jp/entry/runtes/user/pc/RaceSearchZZSDetailAction.do'
+            f'?command=search&prefectureIds={pref_code}&flgTrailTagClicked=1&statusIds=1&statusIds=2'
+        )
+        events += _scrape_runnet_links(trail_url, pref_name, pref_code, region, name_filter=is_trail_or_ultra)
 
     return events
 
@@ -168,10 +199,9 @@ def scrape_sportsentry():
                     name = name_el.get_text(strip=True)
                     if is_excluded(name):
                         continue
-                    # ハーフ or フルのみ
-                    if not any(kw in name for kw in ['マラソン', 'ランニング', 'ラン']):
+                    if not any(kw in name for kw in ['マラソン', 'ランニング', 'ラン', 'トレイル', 'trail', 'Trail', 'ウルトラ']):
                         continue
-                    distance = 'ハーフ' if 'ハーフ' in name else 'フル'
+                    distance = detect_distance(name)
                     date_text = parse_date(date_el.get_text(strip=True)) if date_el else ''
                     href = link_el.get('href', '') if link_el else ''
                     entry_url = href if href.startswith('http') else 'https://www.sportsentry.ne.jp' + href
@@ -405,7 +435,7 @@ def _title_matches(event_name, video_title):
         return True
 
     # 大会名の地域部分を取り出す（"マラソン"/"ハーフマラソン" 前の部分）
-    for suffix in ['シーサイドハーフマラソン', 'ハーフマラソン', '健康マラソン', '温泉マラソン', 'マラソン']:
+    for suffix in ['シーサイドハーフマラソン', 'ハーフマラソン', '健康マラソン', '温泉マラソン', 'ウルトラマラソン', 'トレイルラン', 'トレイル', 'マラソン']:
         if suffix in base:
             prefix = base.split(suffix)[0].strip()
             # 3文字以上の固有部分のみ採用（"福岡"だけでは広すぎる）

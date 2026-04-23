@@ -119,11 +119,14 @@
         </a>
         {% endif %}
 
-        <!-- 管理者: 削除 -->
+        <!-- 管理者: 編集・削除 -->
         {% if is_admin %}
-        <form method="post" action="/admin/events/{{ ev.id }}/delete" onsubmit="return confirm('「{{ ev.name }}」を削除しますか？')">
-          <button type="submit" class="btn-delete">🗑 削除</button>
-        </form>
+        <div class="admin-actions">
+          <button onclick='openEditModal({{ ev | tojson }})' class="btn-edit">✏️ 編集</button>
+          <form method="post" action="/admin/events/{{ ev.id }}/delete" onsubmit="return confirm('「{{ ev.name }}」を削除しますか？')" style="display:inline;">
+            <button type="submit" class="btn-delete">🗑 削除</button>
+          </form>
+        </div>
         {% endif %}
 
         <!-- 管理者: YouTube URL手動設定 -->
@@ -224,6 +227,67 @@
   </div>
 </div>
 <div id="overlay" class="overlay" style="display:none;" onclick="closeAddModal()"></div>
+
+<!-- 大会編集モーダル -->
+<div id="editModal" class="modal" style="display:none;">
+  <div class="modal-inner">
+    <h3>✏️ 大会を編集</h3>
+    <form method="post" id="editForm" action="">
+      <label>大会名 *<input type="text" name="name" id="edit_name" required></label>
+      <label>開催日 *<input type="date" name="date" id="edit_date" required></label>
+      <label>都道府県 *
+        <select name="prefecture" id="edit_prefecture" required>
+          <option value="">選択してください</option>
+          <optgroup label="中国エリア">
+            <option>鳥取</option><option>島根</option><option>岡山</option><option>広島</option><option>山口</option>
+          </optgroup>
+          <optgroup label="九州エリア">
+            <option>福岡</option><option>佐賀</option><option>長崎</option><option>熊本</option>
+            <option>大分</option><option>宮崎</option><option>鹿児島</option><option>沖縄</option>
+          </optgroup>
+        </select>
+      </label>
+      <label>エリア *
+        <select name="region" id="edit_region" required>
+          <option value="中国">中国</option>
+          <option value="九州">九州</option>
+        </select>
+      </label>
+      <label>距離 *
+        <select name="distance" id="edit_distance" required>
+          <option value="フル">フルマラソン</option>
+          <option value="ハーフ">ハーフマラソン</option>
+          <option value="ウルトラ">ウルトラマラソン</option>
+          <option value="トレイル">トレイルラン</option>
+        </select>
+      </label>
+      <label>会場<input type="text" name="venue" id="edit_venue"></label>
+      <label>エントリー開始日<input type="date" name="entry_start" id="edit_entry_start"></label>
+      <label>エントリー締切日<input type="date" name="entry_end" id="edit_entry_end"></label>
+      <label>参加費<input type="text" name="fee" id="edit_fee" placeholder="例: 5,000円"></label>
+      <label>制限時間<input type="text" name="time_limit" id="edit_time_limit" placeholder="例: 6時間"></label>
+      <label>公式サイトURL<input type="url" name="url" id="edit_url"></label>
+      <label>申し込みURL<input type="url" name="entry_url" id="edit_entry_url" placeholder="例: https://runnet.jp/..."></label>
+      <label>申し込みサイト名
+        <select name="entry_site" id="edit_entry_site">
+          <option value="">選択してください</option>
+          <option value="ランネット">ランネット</option>
+          <option value="スポーツエントリー">スポーツエントリー</option>
+          <option value="公式サイト">公式サイト</option>
+          <option value="その他">その他</option>
+        </select>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" name="confirmed" id="edit_confirmed" value="1"> 公開する（確定済み）
+      </label>
+      <div class="modal-buttons">
+        <button type="submit" class="btn-add">保存する</button>
+        <button type="button" onclick="closeEditModal()" class="btn-reset">キャンセル</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="editOverlay" class="overlay" style="display:none;" onclick="closeEditModal()"></div>
 
 <!-- PINログインモーダル -->
 <div id="pinModal" class="modal" style="display:none;">
