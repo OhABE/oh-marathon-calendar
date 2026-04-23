@@ -98,17 +98,21 @@
           {% if ev.fee %}<div class="meta-item">💴 参加費: {{ ev.fee }}</div>{% endif %}
         </div>
 
-        <!-- 申し込みボタン -->
-        {% if ev.entry_url %}
-        <a href="{{ ev.entry_url }}" target="_blank" rel="noopener" class="btn-entry {% if ev.entry_status == 'open' %}btn-entry-open{% else %}btn-entry-closed{% endif %}">
-          📝 申し込みはこちら
-          {% if ev.entry_site %}<span class="entry-site-label">{{ ev.entry_site }}</span>{% endif %}
-        </a>
+        <!-- 申し込みサイト表示（リンクなし） -->
+        {% if ev.entry_site %}
+        <div class="btn-entry btn-entry-info">
+          📝 申し込み: {{ ev.entry_site }}
+        </div>
         {% endif %}
 
         <!-- Googleカレンダーに追加 -->
         <a href="{{ gcal_url(ev) }}" target="_blank" rel="noopener" class="btn-gcal">
           📅 Googleカレンダーに追加
+        </a>
+
+        <!-- Oh!アベチャンネル動画検索 -->
+        <a href="https://www.youtube.com/results?search_query=Oh%21%E3%82%A2%E3%83%99%E3%83%81%E3%83%A3%E3%83%B3%E3%83%8D%E3%83%AB+{{ ev.name | urlencode }}&sp=CAI%3D" target="_blank" rel="noopener" class="btn-youtube">
+          📺 Oh!アベチャンネル動画を見る
         </a>
 
 

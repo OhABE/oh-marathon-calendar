@@ -165,6 +165,32 @@ header h1 { font-size: 2rem; font-weight: 900; letter-spacing: 1px; }
   cursor: default;
   pointer-events: none;
 }
+.btn-entry-info {
+  background: #f5f5f5;
+  color: #555;
+  cursor: default;
+  pointer-events: none;
+  border: 1px solid #ddd;
+  font-size: 0.88rem;
+}
+.btn-youtube {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 7px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-decoration: none;
+  text-align: center;
+  margin-bottom: 10px;
+  background: #fff;
+  color: #c00;
+  border: 1px solid #c00;
+  transition: background 0.15s;
+}
+.btn-youtube:hover { background: #fff0f0; }
 .entry-site-label {
   font-size: 0.75rem;
   background: rgba(255,255,255,0.25);
