@@ -45,10 +45,14 @@ def init_db():
 
     ''')
     conn.commit()
-    # Migration: add youtube_url column to existing DBs
-    try:
-        conn.execute('ALTER TABLE events ADD COLUMN youtube_url TEXT')
-        conn.commit()
-    except Exception:
-        pass
+    # Migration: add columns to existing DBs
+    for col_def in [
+        'ALTER TABLE events ADD COLUMN youtube_url TEXT',
+        'ALTER TABLE events ADD COLUMN youtube_locked INTEGER DEFAULT 0',
+    ]:
+        try:
+            conn.execute(col_def)
+            conn.commit()
+        except Exception:
+            pass
     conn.close()

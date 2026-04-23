@@ -191,6 +191,13 @@ header h1 { font-size: 2rem; font-weight: 900; letter-spacing: 1px; }
   transition: background 0.15s;
 }
 .btn-youtube:hover { background: #fff0f0; }
+
+/* Admin: YouTube URL edit */
+.yt-admin-row { margin-top: 6px; }
+.yt-admin-form { display: flex; gap: 4px; }
+.yt-url-input { flex: 1; padding: 5px 8px; border: 1px solid #fcc; border-radius: 6px; font-size: 0.75rem; min-width: 0; }
+.btn-yt-save { background: #c00; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
+.btn-yt-save:hover { background: #900; }
 .entry-site-label {
   font-size: 0.75rem;
   background: rgba(255,255,255,0.25);

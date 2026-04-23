@@ -381,26 +381,34 @@ YT_HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 }
 
+# 優先チャンネル: (チャンネル名に含まれるキーワード, 検索クエリに使うチャンネル名)
+PRIORITY_CHANNELS = [
+    ('アベ',        'Oh!アベチャンネル'),
+    ('KITAKYUSHU', 'KITAKYUSHU WALKERER'),
+    ('BOBO',       'BOBO JAPAN'),
+    ('揚げや',     '走るから揚げや'),
+]
+
 
 def _yt_base_name(event_name):
-    """大会名から年号(4桁)を除去して基本名を返す"""
-    return re.sub(r'\d{4}', '', event_name).strip()
+    """大会名から年号(4桁)と冒頭の"第N回"を除去して基本名を返す"""
+    name = re.sub(r'第\d+回\s*', '', event_name)
+    return re.sub(r'\d{4}', '', name).strip()
 
 
 def _title_matches(event_name, video_title):
-    """動画タイトルが大会に一致するか厳密に判定"""
-    base = _yt_base_name(event_name)  # e.g. "福岡マラソン"
+    """動画タイトルが大会に一致するか判定（厳密）"""
+    base = _yt_base_name(event_name)
 
     # 完全一致（最優先）
     if base in video_title:
         return True
 
     # 大会名の地域部分を取り出す（"マラソン"/"ハーフマラソン" 前の部分）
-    # 例: "ゆくはしシーサイドハーフマラソン" → "ゆくはしシーサイド"
     for suffix in ['シーサイドハーフマラソン', 'ハーフマラソン', '健康マラソン', '温泉マラソン', 'マラソン']:
         if suffix in base:
             prefix = base.split(suffix)[0].strip()
-            # 短すぎる（2文字以下）はノイズが多いので使わない
+            # 3文字以上の固有部分のみ採用（"福岡"だけでは広すぎる）
             if len(prefix) >= 3 and prefix in video_title:
                 return True
             break
@@ -408,76 +416,88 @@ def _title_matches(event_name, video_title):
     return False
 
 
-def fetch_youtube_url(event_name):
-    """Oh!アベチャンネルの当該大会動画URLを取得（なければNone）"""
-    base = _yt_base_name(event_name)
-    query = f'Oh!アベチャンネル {base}'
-    search_url = f'https://www.youtube.com/results?search_query={quote(query)}&sp=CAI%3D'
-
+def _yt_parse_results(text):
+    """YouTube検索ページのHTMLからvideoRenderer一覧を返す"""
+    marker = 'var ytInitialData = '
+    idx = text.find(marker)
+    if idx == -1:
+        return []
     try:
-        r = requests.get(search_url, headers=YT_HEADERS, timeout=15)
-        text = r.text
+        data, _ = json.JSONDecoder().raw_decode(text[idx + len(marker):])
+    except json.JSONDecodeError:
+        return []
+    sections = (
+        data.get('contents', {})
+            .get('twoColumnSearchResultsRenderer', {})
+            .get('primaryContents', {})
+            .get('sectionListRenderer', {})
+            .get('contents', [])
+    )
+    results = []
+    for section in sections:
+        for item in section.get('itemSectionRenderer', {}).get('contents', []):
+            vr = item.get('videoRenderer', {})
+            if vr:
+                results.append(vr)
+    return results
 
-        # ytInitialData JSONを抽出
-        marker = 'var ytInitialData = '
-        idx = text.find(marker)
-        if idx == -1:
-            print(f'[YouTube] ytInitialData not found for "{event_name}"')
-            return None
-        json_start = idx + len(marker)
-        try:
-            data, _ = json.JSONDecoder().raw_decode(text[json_start:])
-        except json.JSONDecodeError as e:
-            print(f'[YouTube] JSON parse error for "{event_name}": {e}')
-            return None
 
-        # 検索結果を走査
-        sections = (
-            data.get('contents', {})
-                .get('twoColumnSearchResultsRenderer', {})
-                .get('primaryContents', {})
-                .get('sectionListRenderer', {})
-                .get('contents', [])
-        )
-        for section in sections:
-            for item in section.get('itemSectionRenderer', {}).get('contents', []):
-                vr = item.get('videoRenderer', {})
-                if not vr:
-                    continue
-                vid = vr.get('videoId', '')
-                if not vid:
-                    continue
-                title = ''.join(x.get('text', '') for x in vr.get('title', {}).get('runs', []))
-                owner = vr.get('ownerText', vr.get('longBylineText', {}))
-                ch = ''.join(x.get('text', '') for x in owner.get('runs', []))
-
-                # チャンネル名に「アベ」が含まれ、タイトルが一致する場合のみ採用
-                if 'アベ' in ch and _title_matches(event_name, title):
-                    url = f'https://www.youtube.com/watch?v={vid}'
-                    print(f'[YouTube] matched "{event_name}" → {title} ({url})')
-                    return url
-
-        print(f'[YouTube] no match for "{event_name}"')
-        return None
-
+def _yt_search(query, ch_keyword, event_name):
+    """クエリでYouTube検索し、チャンネル名 + タイトルが一致する動画URLを返す"""
+    url = f'https://www.youtube.com/results?search_query={quote(query)}&sp=CAI%3D'
+    try:
+        r = requests.get(url, headers=YT_HEADERS, timeout=15)
+        for vr in _yt_parse_results(r.text):
+            vid = vr.get('videoId', '')
+            if not vid:
+                continue
+            title = ''.join(x.get('text', '') for x in vr.get('title', {}).get('runs', []))
+            owner = vr.get('ownerText', vr.get('longBylineText', {}))
+            ch = ''.join(x.get('text', '') for x in owner.get('runs', []))
+            if ch_keyword and ch_keyword not in ch:
+                continue
+            if _title_matches(event_name, title):
+                video_url = f'https://www.youtube.com/watch?v={vid}'
+                print(f'[YouTube] "{event_name}" ← [{ch}] {title}')
+                return video_url
     except Exception as e:
-        print(f'[YouTube] error for "{event_name}": {e}')
-        return None
+        print(f'[YouTube] search error "{event_name}": {e}')
+    return None
+
+
+def fetch_youtube_url(event_name):
+    """優先チャンネル順に検索し、最初に見つかった動画URLを返す（なければNone）"""
+    base = _yt_base_name(event_name)
+
+    # 優先チャンネルを順番に試す
+    for ch_key, ch_name in PRIORITY_CHANNELS:
+        result = _yt_search(f'{ch_name} {base}', ch_key, event_name)
+        if result:
+            return result
+        time.sleep(1.5)
+
+    # フォールバック: チャンネル不問で検索（タイトル一致のみ）
+    result = _yt_search(f'マラソン {base}', None, event_name)
+    if not result:
+        print(f'[YouTube] no match for "{event_name}"')
+    return result
 
 
 def update_youtube_links():
-    """全確定大会のYouTube動画URLを検索してDBを更新"""
+    """確定大会のうちlocked=0のみYouTube動画URLを自動更新"""
     print(f'[YouTube] 更新開始: {datetime.now()}')
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    events = conn.execute('SELECT id, name FROM events WHERE confirmed=1').fetchall()
+    events = conn.execute(
+        'SELECT id, name FROM events WHERE confirmed=1 AND (youtube_locked IS NULL OR youtube_locked=0)'
+    ).fetchall()
     updated = 0
     for ev in events:
         url = fetch_youtube_url(ev['name'])
         conn.execute('UPDATE events SET youtube_url=? WHERE id=?', (url, ev['id']))
         if url:
             updated += 1
-        time.sleep(2)  # YouTube負荷対策
+        time.sleep(2)
     conn.commit()
     conn.close()
     print(f'[YouTube] 完了: {updated}件動画リンクを設定')

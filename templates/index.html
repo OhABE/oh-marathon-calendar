@@ -110,11 +110,24 @@
           📅 Googleカレンダーに追加
         </a>
 
-        <!-- Oh!アベチャンネル動画（一致した場合のみ表示） -->
+        <!-- 関連動画（一致した場合のみ表示） -->
         {% if ev.youtube_url %}
         <a href="{{ ev.youtube_url }}" target="_blank" rel="noopener" class="btn-youtube">
-          📺 Oh!アベチャンネルで見る
+          📺 関連動画はコチラ
         </a>
+        {% endif %}
+
+        <!-- 管理者: YouTube URL手動設定 -->
+        {% if is_admin %}
+        <div class="yt-admin-row">
+          <form method="post" action="/admin/events/{{ ev.id }}/youtube" class="yt-admin-form">
+            <input type="url" name="youtube_url"
+                   value="{{ ev.youtube_url or '' }}"
+                   placeholder="YouTube URL（空欄でリセット）"
+                   class="yt-url-input">
+            <button type="submit" class="btn-yt-save">{% if ev.youtube_locked %}🔒{% else %}▶{% endif %} 動画設定</button>
+          </form>
+        </div>
         {% endif %}
 
 

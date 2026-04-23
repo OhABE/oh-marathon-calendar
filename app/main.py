@@ -236,6 +236,28 @@ def admin_logout():
     res.delete_cookie('admin_token')
     return res
 
+@app.post('/admin/events/{event_id}/youtube')
+def set_youtube_url(request: Request, event_id: int, youtube_url: str = Form('')):
+    if not is_admin(request):
+        return RedirectResponse('/', status_code=303)
+    db = get_db()
+    if youtube_url.strip():
+        # URLが入力された → 保存してロック（自動更新対象外）
+        db.execute(
+            'UPDATE events SET youtube_url=?, youtube_locked=1 WHERE id=?',
+            (youtube_url.strip(), event_id)
+        )
+    else:
+        # 空欄 → クリアしてアンロック（次回自動更新で再検索）
+        db.execute(
+            'UPDATE events SET youtube_url=NULL, youtube_locked=0 WHERE id=?',
+            (event_id,)
+        )
+    db.commit()
+    db.close()
+    return RedirectResponse('/', status_code=303)
+
+
 @app.post('/scrape')
 def manual_scrape(request: Request):
     if not is_admin(request):
