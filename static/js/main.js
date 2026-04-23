@@ -6,6 +6,14 @@ function closeAddModal() {
   document.getElementById('addModal').style.display = 'none';
   document.getElementById('overlay').style.display = 'none';
 }
+function openPinModal() {
+  document.getElementById('pinModal').style.display = 'block';
+  document.getElementById('pinOverlay').style.display = 'block';
+}
+function closePinModal() {
+  document.getElementById('pinModal').style.display = 'none';
+  document.getElementById('pinOverlay').style.display = 'none';
+}
 function openCalModal() {
   document.getElementById('calModal').style.display = 'block';
   document.getElementById('calOverlay').style.display = 'block';

@@ -38,8 +38,15 @@
       <a href="/" class="btn-reset">リセット</a>
     </form>
     <div class="header-actions">
+      {% if is_admin %}
       <button onclick="openAddModal()" class="btn-add">＋ 大会を追加</button>
       <button onclick="runScrape()" class="btn-scrape">🔄 自動取得</button>
+      <form method="post" action="/admin/logout" style="display:inline;">
+        <button type="submit" class="btn-logout">🔓 ログアウト</button>
+      </form>
+      {% else %}
+      <button onclick="openPinModal()" class="btn-login">🔑 管理者ログイン</button>
+      {% endif %}
       <button onclick="openCalModal()" class="btn-cal">📅 カレンダー連携</button>
     </div>
   </section>
@@ -65,6 +72,10 @@
           📋 情報確認中
           {% endif %}
         </div>
+
+        {% if ev.status in ['entered', 'planning', 'running', 'finished'] %}
+        <div class="abe-badge">📺 Oh!アベチャンネル参加</div>
+        {% endif %}
 
         <div class="event-header">
           <span class="badge-region {{ ev.region }}">{{ ev.region }}</span>
@@ -210,6 +221,24 @@
   </div>
 </div>
 <div id="overlay" class="overlay" style="display:none;" onclick="closeAddModal()"></div>
+
+<!-- PINログインモーダル -->
+<div id="pinModal" class="modal" style="display:none;">
+  <div class="modal-inner">
+    <h3>🔑 管理者ログイン</h3>
+    <p style="font-size:0.9rem; color:#666; margin-bottom:16px;">大会の追加・編集にはPINが必要です。</p>
+    <form method="post" action="/admin/login">
+      <label>PIN番号
+        <input type="password" name="pin" placeholder="PINを入力" required autofocus>
+      </label>
+      <div class="modal-buttons">
+        <button type="submit" class="btn-add">ログイン</button>
+        <button type="button" onclick="closePinModal()" class="btn-reset">キャンセル</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="pinOverlay" class="overlay" style="display:none;" onclick="closePinModal()"></div>
 
 <!-- カレンダー連携モーダル -->
 <div id="calModal" class="modal" style="display:none;">

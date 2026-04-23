@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form, File, UploadFile
+from fastapi import FastAPI, Request, Form, File, UploadFile, Cookie
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -13,6 +13,10 @@ from .scraper import run_scrape, seed_confirmed_data
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
+ADMIN_PIN = os.environ.get('ADMIN_PIN', '0427')  # デフォルトは佐伯番匠の日
+
+def is_admin(request: Request) -> bool:
+    return request.cookies.get('admin_token') == ADMIN_PIN
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
@@ -112,6 +116,7 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         'selected_pref': pref,
         'today': today,
         'gcal_url': gcal_url,
+        'is_admin': is_admin(request),
     })
 
 def make_ical(events, title='Oh!マラソンカレンダー'):
@@ -245,7 +250,23 @@ def add_event(
     db.close()
     return RedirectResponse('/', status_code=303)
 
+@app.post('/admin/login')
+def admin_login(pin: str = Form(...)):
+    if pin == ADMIN_PIN:
+        res = RedirectResponse('/', status_code=303)
+        res.set_cookie('admin_token', ADMIN_PIN, max_age=60*60*24*30, httponly=True)
+        return res
+    return RedirectResponse('/?error=pin', status_code=303)
+
+@app.post('/admin/logout')
+def admin_logout():
+    res = RedirectResponse('/', status_code=303)
+    res.delete_cookie('admin_token')
+    return res
+
 @app.post('/scrape')
-def manual_scrape():
+def manual_scrape(request: Request):
+    if not is_admin(request):
+        return JSONResponse({'error': '管理者のみ操作できます'}, status_code=403)
     saved = run_scrape()
     return JSONResponse({'message': f'{saved}件の新しい大会を取得しました'})

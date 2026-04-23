@@ -119,6 +119,24 @@ header h1 { font-size: 2rem; font-weight: 900; letter-spacing: 1px; }
 .event-meta { margin-bottom: 12px; }
 .meta-item { font-size: 0.85rem; color: #555; margin-bottom: 4px; }
 
+/* Oh!アベチャンネル参加バッジ */
+.abe-badge {
+  background: linear-gradient(135deg, #e84393, #ff6b35);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: bold;
+  padding: 5px 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  display: inline-block;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(232,67,147,0.3);
+}
+
+.btn-login { background: #555; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
+.btn-login:hover { background: #333; }
+.btn-logout { background: #eee; color: #555; border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+
 /* Entry button */
 .btn-entry {
   display: flex;
