@@ -83,65 +83,55 @@ def seed_sample_data():
         {
             'name': '佐伯番匠健康マラソン', 'date': '2026-04-27',
             'prefecture': '大分', 'region': '九州', 'distance': 'ハーフ',
-            'venue': '佐伯市番匠川河川公園', 'entry_start': '2026-01-15',
-            'entry_end': '2026-04-10', 'fee': '3,000円', 'time_limit': '3時間',
-            'url': '', 'entry_url': 'https://runnet.jp', 'entry_site': 'ランネット', 'source': 'manual'
+            'venue': '佐伯市番匠川河川公園', 'entry_start': '',
+            'entry_end': '', 'fee': '3,500円', 'time_limit': '要確認',
+            'url': 'https://banzyo.wixsite.com/marason',
+            'entry_url': 'https://runnet.jp/entry/runtes/smp/racedetail.do?raceId=376394',
+            'entry_site': 'ランネット', 'source': 'manual'
         },
         {
             'name': '福岡マラソン2026', 'date': '2026-11-08',
             'prefecture': '福岡', 'region': '九州', 'distance': 'フル',
-            'venue': '福岡市', 'entry_start': '2026-06-01',
-            'entry_end': '2026-07-31', 'fee': '12,000円', 'time_limit': '6時間',
+            'venue': '福岡市', 'entry_start': '2026-04-21',
+            'entry_end': '2026-05-20', 'fee': '16,000円', 'time_limit': '7時間',
+            'url': 'https://www.f-marathon.jp/',
+            'entry_url': 'https://www.f-marathon.jp/runner/apply.php',
+            'entry_site': 'ランネット', 'source': 'manual'
+        },
+        {
+            'name': '下関海響マラソン', 'date': '2026-11-01',
+            'prefecture': '山口', 'region': '中国', 'distance': 'フル',
+            'venue': '下関市', 'entry_start': '2026-05-01',
+            'entry_end': '2026-07-15', 'fee': '要確認', 'time_limit': '要確認',
             'url': '', 'entry_url': 'https://runnet.jp', 'entry_site': 'ランネット', 'source': 'manual'
         },
         {
             'name': '別府大分毎日マラソン', 'date': '2027-02-07',
             'prefecture': '大分', 'region': '九州', 'distance': 'フル',
             'venue': '大分市', 'entry_start': '2026-09-01',
-            'entry_end': '2026-10-31', 'fee': '10,000円', 'time_limit': '4時間',
+            'entry_end': '2026-10-31', 'fee': '要確認', 'time_limit': '要確認',
             'url': '', 'entry_url': 'https://www.sportsentry.ne.jp', 'entry_site': 'スポーツエントリー', 'source': 'manual'
-        },
-        {
-            'name': '広島マラソン2026', 'date': '2026-11-15',
-            'prefecture': '広島', 'region': '中国', 'distance': 'フル',
-            'venue': '広島市', 'entry_start': '2026-05-01',
-            'entry_end': '2026-06-30', 'fee': '12,000円', 'time_limit': '6時間',
-            'url': '', 'entry_url': 'https://runnet.jp', 'entry_site': 'ランネット', 'source': 'manual'
-        },
-        {
-            'name': '下関海響マラソン', 'date': '2026-11-01',
-            'prefecture': '山口', 'region': '中国', 'distance': 'フル',
-            'venue': '下関市', 'entry_start': '2026-05-01',
-            'entry_end': '2026-07-15', 'fee': '11,000円', 'time_limit': '6時間30分',
-            'url': '', 'entry_url': 'https://runnet.jp', 'entry_site': 'ランネット', 'source': 'manual'
         },
         {
             'name': '熊本城マラソン2027', 'date': '2027-02-21',
             'prefecture': '熊本', 'region': '九州', 'distance': 'フル',
             'venue': '熊本市', 'entry_start': '2026-08-01',
-            'entry_end': '2026-09-30', 'fee': '12,000円', 'time_limit': '6時間',
+            'entry_end': '2026-09-30', 'fee': '要確認', 'time_limit': '要確認',
             'url': '', 'entry_url': 'https://runnet.jp', 'entry_site': 'ランネット', 'source': 'manual'
         },
         {
             'name': '鹿児島マラソン2027', 'date': '2027-03-07',
             'prefecture': '鹿児島', 'region': '九州', 'distance': 'フル',
             'venue': '鹿児島市', 'entry_start': '2026-09-01',
-            'entry_end': '2026-10-31', 'fee': '12,000円', 'time_limit': '6時間',
+            'entry_end': '2026-10-31', 'fee': '要確認', 'time_limit': '要確認',
             'url': '', 'entry_url': 'https://www.sportsentry.ne.jp', 'entry_site': 'スポーツエントリー', 'source': 'manual'
         },
         {
             'name': '岡山マラソン2026', 'date': '2026-11-22',
             'prefecture': '岡山', 'region': '中国', 'distance': 'フル',
             'venue': '岡山市', 'entry_start': '2026-05-15',
-            'entry_end': '2026-07-20', 'fee': '11,000円', 'time_limit': '6時間',
+            'entry_end': '2026-07-20', 'fee': '要確認', 'time_limit': '要確認',
             'url': '', 'entry_url': 'https://runnet.jp', 'entry_site': 'ランネット', 'source': 'manual'
-        },
-        {
-            'name': '宮崎県民ハーフマラソン', 'date': '2026-12-06',
-            'prefecture': '宮崎', 'region': '九州', 'distance': 'ハーフ',
-            'venue': '宮崎市', 'entry_start': '2026-08-01',
-            'entry_end': '2026-10-31', 'fee': '4,000円', 'time_limit': '2時間30分',
-            'url': '', 'entry_url': 'https://www.sportsentry.ne.jp', 'entry_site': 'スポーツエントリー', 'source': 'manual'
         },
     ]
     return save_events(sample_events)
