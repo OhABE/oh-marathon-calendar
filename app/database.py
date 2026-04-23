@@ -26,6 +26,7 @@ def init_db():
             url TEXT,
             entry_url TEXT,
             entry_site TEXT,
+            confirmed INTEGER DEFAULT 0,
             source TEXT,
             updated_at TEXT DEFAULT (datetime('now', 'localtime'))
         );

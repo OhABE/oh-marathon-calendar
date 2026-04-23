@@ -9,7 +9,7 @@ import sqlite3
 from datetime import datetime
 
 from .database import init_db, get_db
-from .scraper import run_scrape, seed_sample_data
+from .scraper import run_scrape, seed_confirmed_data
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
@@ -40,8 +40,8 @@ def startup():
     count = db.execute('SELECT COUNT(*) FROM events').fetchone()[0]
     db.close()
     if count == 0:
-        seed_sample_data()
-    scheduler.add_job(run_scrape, 'cron', hour=3, minute=0)
+        seed_confirmed_data()
+    scheduler.add_job(run_scrape, 'cron', hour=0, minute=0)
     scheduler.start()
 
 @app.on_event('shutdown')
@@ -55,7 +55,7 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         SELECT e.*, p.status, p.memo, p.finish_time, p.id as progress_id
         FROM events e
         LEFT JOIN user_progress p ON e.id = p.event_id
-        WHERE 1=1
+        WHERE e.confirmed = 1
     '''
     params = []
     if region:
@@ -155,8 +155,8 @@ def add_event(
 ):
     db = get_db()
     db.execute('''
-        INSERT INTO events (name, date, prefecture, region, distance, venue, entry_start, entry_end, fee, time_limit, url, entry_url, entry_site, source)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual')
+        INSERT INTO events (name, date, prefecture, region, distance, venue, entry_start, entry_end, fee, time_limit, url, entry_url, entry_site, confirmed, source)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'manual')
     ''', (name, date, prefecture, region, distance, venue, entry_start, entry_end, fee, time_limit, url, entry_url, entry_site))
     db.commit()
     db.close()
