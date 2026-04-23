@@ -126,7 +126,8 @@
         </div>
         {% endif %}
 
-        <!-- 写真アップロード -->
+        {% if is_admin %}
+        <!-- 写真アップロード（管理者のみ） -->
         <div class="photo-upload-section">
           <button class="btn-photo-toggle" onclick="togglePhotoForm({{ ev.id }})">📷 写真を追加</button>
           <div id="photo-form-{{ ev.id }}" class="photo-form" style="display:none;">
@@ -139,7 +140,7 @@
           </div>
         </div>
 
-        <!-- 進捗ステータス -->
+        <!-- 進捗ステータス（管理者のみ） -->
         <div class="progress-section">
           <form method="post" action="/progress/{{ ev.id }}" class="progress-form">
             <select name="status" class="status-select">
@@ -156,6 +157,7 @@
             <button type="submit" class="btn-save">保存</button>
           </form>
         </div>
+        {% endif %}
 
       </div>
       {% endfor %}

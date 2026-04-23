@@ -186,7 +186,9 @@ def my_calendar_ics():
                     headers={'Content-Disposition': 'attachment; filename=my-marathon.ics'})
 
 @app.post('/progress/{event_id}')
-def update_progress(event_id: int, status: str = Form(''), memo: str = Form(''), finish_time: str = Form('')):
+def update_progress(request: Request, event_id: int, status: str = Form(''), memo: str = Form(''), finish_time: str = Form('')):
+    if not is_admin(request):
+        return RedirectResponse('/', status_code=303)
     db = get_db()
     existing = db.execute('SELECT id FROM user_progress WHERE event_id = ?', (event_id,)).fetchone()
     if existing:
@@ -202,7 +204,9 @@ def update_progress(event_id: int, status: str = Form(''), memo: str = Form(''),
     return RedirectResponse('/', status_code=303)
 
 @app.post('/photos/upload/{event_id}')
-async def upload_photo(event_id: int, file: UploadFile = File(...), caption: str = Form('')):
+async def upload_photo(request: Request, event_id: int, file: UploadFile = File(...), caption: str = Form('')):
+    if not is_admin(request):
+        return RedirectResponse('/', status_code=303)
     ext = os.path.splitext(file.filename or '')[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         return JSONResponse({'error': '画像ファイル（JPG/PNG/GIF）のみアップロードできます'}, status_code=400)
@@ -221,7 +225,9 @@ async def upload_photo(event_id: int, file: UploadFile = File(...), caption: str
     return RedirectResponse('/', status_code=303)
 
 @app.post('/photos/delete/{photo_id}')
-def delete_photo(photo_id: int):
+def delete_photo(request: Request, photo_id: int):
+    if not is_admin(request):
+        return RedirectResponse('/', status_code=303)
     db = get_db()
     photo = db.execute('SELECT filename FROM event_photos WHERE id = ?', (photo_id,)).fetchone()
     if photo:
@@ -235,12 +241,15 @@ def delete_photo(photo_id: int):
 
 @app.post('/events/add')
 def add_event(
+    request: Request,
     name: str = Form(...), date: str = Form(...), prefecture: str = Form(...),
     region: str = Form(...), distance: str = Form(...), venue: str = Form(''),
     entry_start: str = Form(''), entry_end: str = Form(''),
     fee: str = Form(''), time_limit: str = Form(''), url: str = Form(''),
     entry_url: str = Form(''), entry_site: str = Form('')
 ):
+    if not is_admin(request):
+        return RedirectResponse('/', status_code=303)
     db = get_db()
     db.execute('''
         INSERT INTO events (name, date, prefecture, region, distance, venue, entry_start, entry_end, fee, time_limit, url, entry_url, entry_site, confirmed, source)
