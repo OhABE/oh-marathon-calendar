@@ -8,7 +8,7 @@ import sqlite3
 from datetime import datetime
 
 from .database import init_db, get_db
-from .scraper import run_scrape, seed_confirmed_data
+from .scraper import run_scrape, seed_confirmed_data, update_youtube_links
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 ADMIN_PIN = os.environ.get('ADMIN_PIN', '0427')  # デフォルトは佐伯番匠の日
@@ -42,6 +42,9 @@ def startup():
     if count == 0:
         seed_confirmed_data()
     scheduler.add_job(run_scrape, 'cron', hour=0, minute=0)
+    scheduler.add_job(update_youtube_links, 'cron', hour=0, minute=30)
+    # 起動時にYouTubeリンクをバックグラウンドで更新
+    scheduler.add_job(update_youtube_links, 'date', run_date=datetime.now())
     scheduler.start()
 
 @app.on_event('shutdown')

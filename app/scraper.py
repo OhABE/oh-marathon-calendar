@@ -5,6 +5,8 @@ import sqlite3
 import os
 import time
 import re
+import json
+from urllib.parse import quote
 
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'marathon.db')
 
@@ -369,3 +371,114 @@ def run_scrape():
     saved = save_events(all_events)
     print(f'[scraper] 完了: {saved}件追加')
     return saved
+
+
+# ── YouTube連携 ──────────────────────────────────────────────
+
+YT_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    'Accept-Language': 'ja,en;q=0.9',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+}
+
+
+def _yt_base_name(event_name):
+    """大会名から年号(4桁)を除去して基本名を返す"""
+    return re.sub(r'\d{4}', '', event_name).strip()
+
+
+def _title_matches(event_name, video_title):
+    """動画タイトルが大会に一致するか厳密に判定"""
+    base = _yt_base_name(event_name)  # e.g. "福岡マラソン"
+
+    # 完全一致（最優先）
+    if base in video_title:
+        return True
+
+    # 大会名の地域部分を取り出す（"マラソン"/"ハーフマラソン" 前の部分）
+    # 例: "ゆくはしシーサイドハーフマラソン" → "ゆくはしシーサイド"
+    for suffix in ['シーサイドハーフマラソン', 'ハーフマラソン', '健康マラソン', '温泉マラソン', 'マラソン']:
+        if suffix in base:
+            prefix = base.split(suffix)[0].strip()
+            # 短すぎる（2文字以下）はノイズが多いので使わない
+            if len(prefix) >= 3 and prefix in video_title:
+                return True
+            break
+
+    return False
+
+
+def fetch_youtube_url(event_name):
+    """Oh!アベチャンネルの当該大会動画URLを取得（なければNone）"""
+    base = _yt_base_name(event_name)
+    query = f'Oh!アベチャンネル {base}'
+    search_url = f'https://www.youtube.com/results?search_query={quote(query)}&sp=CAI%3D'
+
+    try:
+        r = requests.get(search_url, headers=YT_HEADERS, timeout=15)
+        text = r.text
+
+        # ytInitialData JSONを抽出
+        marker = 'var ytInitialData = '
+        idx = text.find(marker)
+        if idx == -1:
+            print(f'[YouTube] ytInitialData not found for "{event_name}"')
+            return None
+        json_start = idx + len(marker)
+        try:
+            data, _ = json.JSONDecoder().raw_decode(text[json_start:])
+        except json.JSONDecodeError as e:
+            print(f'[YouTube] JSON parse error for "{event_name}": {e}')
+            return None
+
+        # 検索結果を走査
+        sections = (
+            data.get('contents', {})
+                .get('twoColumnSearchResultsRenderer', {})
+                .get('primaryContents', {})
+                .get('sectionListRenderer', {})
+                .get('contents', [])
+        )
+        for section in sections:
+            for item in section.get('itemSectionRenderer', {}).get('contents', []):
+                vr = item.get('videoRenderer', {})
+                if not vr:
+                    continue
+                vid = vr.get('videoId', '')
+                if not vid:
+                    continue
+                title = ''.join(x.get('text', '') for x in vr.get('title', {}).get('runs', []))
+                owner = vr.get('ownerText', vr.get('longBylineText', {}))
+                ch = ''.join(x.get('text', '') for x in owner.get('runs', []))
+
+                # チャンネル名に「アベ」が含まれ、タイトルが一致する場合のみ採用
+                if 'アベ' in ch and _title_matches(event_name, title):
+                    url = f'https://www.youtube.com/watch?v={vid}'
+                    print(f'[YouTube] matched "{event_name}" → {title} ({url})')
+                    return url
+
+        print(f'[YouTube] no match for "{event_name}"')
+        return None
+
+    except Exception as e:
+        print(f'[YouTube] error for "{event_name}": {e}')
+        return None
+
+
+def update_youtube_links():
+    """全確定大会のYouTube動画URLを検索してDBを更新"""
+    print(f'[YouTube] 更新開始: {datetime.now()}')
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    events = conn.execute('SELECT id, name FROM events WHERE confirmed=1').fetchall()
+    updated = 0
+    for ev in events:
+        url = fetch_youtube_url(ev['name'])
+        conn.execute('UPDATE events SET youtube_url=? WHERE id=?', (url, ev['id']))
+        if url:
+            updated += 1
+        time.sleep(2)  # YouTube負荷対策
+    conn.commit()
+    conn.close()
+    print(f'[YouTube] 完了: {updated}件動画リンクを設定')
+    return updated

@@ -110,10 +110,12 @@
           📅 Googleカレンダーに追加
         </a>
 
-        <!-- Oh!アベチャンネル動画検索 -->
-        <a href="https://www.youtube.com/results?search_query=Oh%21%E3%82%A2%E3%83%99%E3%83%81%E3%83%A3%E3%83%B3%E3%83%8D%E3%83%AB+{{ ev.name | urlencode }}&sp=CAI%3D" target="_blank" rel="noopener" class="btn-youtube">
-          📺 Oh!アベチャンネル動画を見る
+        <!-- Oh!アベチャンネル動画（一致した場合のみ表示） -->
+        {% if ev.youtube_url %}
+        <a href="{{ ev.youtube_url }}" target="_blank" rel="noopener" class="btn-youtube">
+          📺 Oh!アベチャンネルで見る
         </a>
+        {% endif %}
 
 
         <!-- 進捗ステータス（全員が入力可能） -->

@@ -28,6 +28,7 @@ def init_db():
             entry_site TEXT,
             confirmed INTEGER DEFAULT 0,
             source TEXT,
+            youtube_url TEXT,
             updated_at TEXT DEFAULT (datetime('now', 'localtime'))
         );
 
@@ -44,4 +45,10 @@ def init_db():
 
     ''')
     conn.commit()
+    # Migration: add youtube_url column to existing DBs
+    try:
+        conn.execute('ALTER TABLE events ADD COLUMN youtube_url TEXT')
+        conn.commit()
+    except Exception:
+        pass
     conn.close()
