@@ -90,6 +90,12 @@ def startup():
 def shutdown():
     scheduler.shutdown()
 
+@app.get('/admin/note', response_class=HTMLResponse)
+def note_draft(request: Request):
+    if not is_admin(request):
+        return RedirectResponse('/')
+    return templates.TemplateResponse('note.html', {'request': request})
+
 @app.get('/', response_class=HTMLResponse)
 def index(request: Request, region: str = '', distance: str = '', pref: str = ''):
     # 訪問者IDの取得（管理者は常に'admin'）

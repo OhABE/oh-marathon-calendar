@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>note下書き — Oh!マラソンカレンダー</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: #f5f7fa; color: #333; }
+    header { background: linear-gradient(135deg, #e84393 0%, #ff6b35 100%); color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+    header a { color: white; text-decoration: none; font-size: 0.85rem; opacity: 0.85; }
+    header h1 { font-size: 1.2rem; font-weight: 900; }
+    main { max-width: 800px; margin: 32px auto; padding: 0 16px; }
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    label { display: block; font-size: 0.85rem; font-weight: bold; color: #666; margin-bottom: 6px; }
+    input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; margin-bottom: 16px; }
+    textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; line-height: 1.7; resize: vertical; min-height: 400px; }
+    .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .btn-copy { background: #e84393; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; }
+    .btn-copy:hover { background: #c73578; }
+    .btn-clear { background: #f0f0f0; color: #666; border: none; padding: 12px 20px; border-radius: 8px; font-size: 0.95rem; cursor: pointer; }
+    .btn-open { background: #41c9b4; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #333; color: white; padding: 12px 20px; border-radius: 10px; font-size: 0.9rem; display: none; }
+    .char-count { font-size: 0.78rem; color: #aaa; margin-top: 4px; text-align: right; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="/">← カレンダーに戻る</a>
+  <h1>📝 note下書き</h1>
+</header>
+
+<main>
+  <div class="card">
+    <label>タイトル</label>
+    <input type="text" id="title" placeholder="記事タイトルを入力">
+
+    <label>本文</label>
+    <textarea id="body" placeholder="ここに本文を書く..."></textarea>
+    <div class="char-count"><span id="count">0</span> 文字</div>
+
+    <div class="actions">
+      <button class="btn-copy" onclick="copyAll()">📋 全文コピー</button>
+      <a class="btn-open" href="https://note.com/new" target="_blank" rel="noopener">note を開く →</a>
+      <button class="btn-clear" onclick="clearAll()">クリア</button>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast">コピーしました！</div>
+
+<script>
+  const titleEl = document.getElementById('title');
+  const bodyEl = document.getElementById('body');
+  const countEl = document.getElementById('count');
+
+  // 文字数カウント
+  bodyEl.addEventListener('input', () => {
+    countEl.textContent = bodyEl.value.length;
+    save();
+  });
+  titleEl.addEventListener('input', save);
+
+  // ローカル保存
+  function save() {
+    localStorage.setItem('note_title', titleEl.value);
+    localStorage.setItem('note_body', bodyEl.value);
+  }
+
+  // 復元
+  titleEl.value = localStorage.getItem('note_title') || '';
+  bodyEl.value = localStorage.getItem('note_body') || '';
+  countEl.textContent = bodyEl.value.length;
+
+  function copyAll() {
+    const text = titleEl.value ? titleEl.value + '\n\n' + bodyEl.value : bodyEl.value;
+    navigator.clipboard.writeText(text).then(() => {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 2000);
+    });
+  }
+
+  function clearAll() {
+    if (!confirm('下書きを削除しますか？')) return;
+    titleEl.value = '';
+    bodyEl.value = '';
+    countEl.textContent = 0;
+    localStorage.removeItem('note_title');
+    localStorage.removeItem('note_body');
+  }
+</script>
+</body>
+</html>
