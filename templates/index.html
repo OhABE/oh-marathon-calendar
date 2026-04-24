@@ -11,7 +11,7 @@
 <header>
   <div class="header-inner">
     <h1>🏃 Oh!マラソンカレンダー</h1>
-    <p class="subtitle">中国・九州エリアのマラソン・ウルトラ・トレイルラン情報</p>
+    <p class="subtitle">中国・九州エリアのマラソン・ウルトラ・トレイルラン情報<br><small style="opacity:0.8;font-size:0.78rem;">詳しくは各お申し込みサイトをご確認ください</small></p>
   </div>
 </header>
 
@@ -74,8 +74,13 @@
           {% endif %}
         </div>
 
-        {% if ev.admin_status in ['entered', 'planning', 'running', 'finished'] %}
-        <div class="abe-badge">📺 Oh!アベチャンネル参加</div>
+        {% if ev.admin_status and ev.admin_status not in ['none', 'checking', 'dns'] %}
+        <div class="abe-badge">
+          {% if ev.entry_status == 'finished' or ev.admin_status == 'finished' %}📺 Oh!アベチャンネル 参加済み
+          {% elif ev.admin_status == 'lottery' %}🎰 Oh!アベチャンネル 抽選待ち
+          {% elif ev.admin_status == 'running' %}🏃 Oh!アベチャンネル 参加中
+          {% else %}🏁 Oh!アベチャンネル 参加予定{% endif %}
+        </div>
         {% endif %}
 
         <div class="event-header">
@@ -149,6 +154,7 @@
               <option value="none" {% if not ev.visitor_status or ev.visitor_status=='none' %}selected{% endif %}>− 未設定</option>
               <option value="checking" {% if ev.visitor_status=='checking' %}selected{% endif %}>👀 検討中</option>
               <option value="entered" {% if ev.visitor_status=='entered' %}selected{% endif %}>✅ エントリー済み</option>
+              <option value="lottery" {% if ev.visitor_status=='lottery' %}selected{% endif %}>🎰 抽選待ち</option>
               <option value="planning" {% if ev.visitor_status=='planning' %}selected{% endif %}>🏁 参加予定</option>
               <option value="running" {% if ev.visitor_status=='running' %}selected{% endif %}>🏃 参加中</option>
               <option value="finished" {% if ev.visitor_status=='finished' %}selected{% endif %}>🏆 完走！</option>
@@ -200,6 +206,7 @@
           <option value="ハーフ">ハーフマラソン</option>
           <option value="ウルトラ">ウルトラマラソン</option>
           <option value="トレイル">トレイルラン</option>
+          <option value="その他">その他</option>
         </select>
       </label>
       <label>会場<input type="text" name="venue"></label>
@@ -258,6 +265,7 @@
           <option value="ハーフ">ハーフマラソン</option>
           <option value="ウルトラ">ウルトラマラソン</option>
           <option value="トレイル">トレイルラン</option>
+          <option value="その他">その他</option>
         </select>
       </label>
       <label>会場<input type="text" name="venue" id="edit_venue"></label>
@@ -310,6 +318,9 @@
 <div id="calModal" class="modal" style="display:none;">
   <div class="modal-inner">
     <h3>📅 Googleカレンダー連携</h3>
+    <p style="font-size:0.85rem;color:#e67e22;background:#fff8f0;border-left:3px solid #e67e22;padding:8px 12px;border-radius:4px;margin-bottom:16px;">
+      ⚠️ スマートフォンアプリからではなく、パソコンのブラウザからの作業となります。
+    </p>
 
     <div class="cal-section">
       <h4>① 全大会をGoogleカレンダーに追加</h4>

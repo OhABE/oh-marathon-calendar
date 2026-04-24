@@ -4,8 +4,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
+import re
 import sqlite3
 import uuid
+from collections import defaultdict
 from datetime import datetime
 
 from .database import init_db, get_db
@@ -34,6 +36,42 @@ def get_entry_status(entry_start, entry_end, event_date, today):
         return 'upcoming'
     return 'unknown'
 
+def cleanup_old_editions():
+    """次回大会が登録済みの場合、前回大会（過去日程）を自動削除する"""
+    db = get_db()
+    today = datetime.now().strftime('%Y-%m-%d')
+    events = db.execute(
+        'SELECT id, name, prefecture, distance, date FROM events WHERE confirmed=1'
+    ).fetchall()
+
+    def base_name(name):
+        # 年号(2024〜2029)・回数表記を除去して大会名を正規化
+        name = re.sub(r'[（(（]?\s*\'?\s*20[2-9]\d\s*[）)）]?', '', name)
+        name = re.sub(r'第\s*\d+\s*回', '', name)
+        return name.strip()
+
+    groups = defaultdict(list)
+    for ev in events:
+        key = (ev['prefecture'], ev['distance'], base_name(ev['name']))
+        groups[key].append({'id': ev['id'], 'date': ev['date']})
+
+    deleted = 0
+    for evs in groups.values():
+        if len(evs) <= 1:
+            continue
+        future = [e for e in evs if e['date'] >= today]
+        past   = [e for e in evs if e['date'] <  today]
+        if future and past:
+            for old in past:
+                db.execute('DELETE FROM user_progress WHERE event_id = ?', (old['id'],))
+                db.execute('DELETE FROM events WHERE id = ?', (old['id'],))
+                deleted += 1
+
+    db.commit()
+    db.close()
+    print(f'[cleanup] 旧大会 {deleted} 件を削除しました')
+    return deleted
+
 @app.on_event('startup')
 def startup():
     init_db()
@@ -42,9 +80,9 @@ def startup():
     db.close()
     if count == 0:
         seed_confirmed_data()
-    scheduler.add_job(run_scrape, 'cron', hour=0, minute=0)
-    scheduler.add_job(update_youtube_links, 'cron', hour=0, minute=30)
-    # 起動時にYouTubeリンクをバックグラウンドで更新
+    scheduler.add_job(run_scrape,          'cron', hour=0, minute=0)
+    scheduler.add_job(cleanup_old_editions,'cron', hour=0, minute=10)
+    scheduler.add_job(update_youtube_links,'cron', hour=0, minute=30)
     scheduler.add_job(update_youtube_links, 'date', run_date=datetime.now())
     scheduler.start()
 
