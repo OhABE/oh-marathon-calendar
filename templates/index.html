@@ -57,7 +57,7 @@
     {% if events %}
     <div class="events-grid">
       {% for ev in events %}
-      <div class="event-card entry-{{ ev.entry_status }} user-{{ ev.status or 'none' }}">
+      <div class="event-card entry-{{ ev.entry_status }} user-{{ ev.visitor_status or 'none' }}">
 
         <!-- ステータスバー（一番上に大きく表示） -->
         <div class="entry-status-bar status-{{ ev.entry_status }}">
@@ -74,7 +74,7 @@
           {% endif %}
         </div>
 
-        {% if ev.by_admin and ev.status in ['entered', 'planning', 'running', 'finished'] %}
+        {% if ev.admin_status in ['entered', 'planning', 'running', 'finished'] %}
         <div class="abe-badge">📺 Oh!アベチャンネル参加</div>
         {% endif %}
 
@@ -142,20 +142,20 @@
         {% endif %}
 
 
-        <!-- 進捗ステータス（全員が入力可能） -->
+        <!-- 進捗ステータス（訪問者ごとに独立して入力可能） -->
         <div class="progress-section">
           <form method="post" action="/progress/{{ ev.id }}" class="progress-form">
             <select name="status" class="status-select">
-              <option value="none" {% if not ev.status or ev.status=='none' %}selected{% endif %}>− 未設定</option>
-              <option value="checking" {% if ev.status=='checking' %}selected{% endif %}>👀 検討中</option>
-              <option value="entered" {% if ev.status=='entered' %}selected{% endif %}>✅ エントリー済み</option>
-              <option value="planning" {% if ev.status=='planning' %}selected{% endif %}>🏁 参加予定</option>
-              <option value="running" {% if ev.status=='running' %}selected{% endif %}>🏃 参加中</option>
-              <option value="finished" {% if ev.status=='finished' %}selected{% endif %}>🏆 完走！</option>
-              <option value="dns" {% if ev.status=='dns' %}selected{% endif %}>😢 欠場・途中棄権</option>
+              <option value="none" {% if not ev.visitor_status or ev.visitor_status=='none' %}selected{% endif %}>− 未設定</option>
+              <option value="checking" {% if ev.visitor_status=='checking' %}selected{% endif %}>👀 検討中</option>
+              <option value="entered" {% if ev.visitor_status=='entered' %}selected{% endif %}>✅ エントリー済み</option>
+              <option value="planning" {% if ev.visitor_status=='planning' %}selected{% endif %}>🏁 参加予定</option>
+              <option value="running" {% if ev.visitor_status=='running' %}selected{% endif %}>🏃 参加中</option>
+              <option value="finished" {% if ev.visitor_status=='finished' %}selected{% endif %}>🏆 完走！</option>
+              <option value="dns" {% if ev.visitor_status=='dns' %}selected{% endif %}>😢 欠場・途中棄権</option>
             </select>
-            <input type="text" name="finish_time" placeholder="タイム (例: 2:05:30)" value="{{ ev.finish_time or '' }}" class="time-input">
-            <input type="text" name="memo" placeholder="メモ..." value="{{ ev.memo or '' }}" class="memo-input">
+            <input type="text" name="finish_time" placeholder="タイム (例: 2:05:30)" value="{{ ev.visitor_finish_time or '' }}" class="time-input">
+            <input type="text" name="memo" placeholder="メモ..." value="{{ ev.visitor_memo or '' }}" class="memo-input">
             <button type="submit" class="btn-save">保存</button>
           </form>
         </div>

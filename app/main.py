@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import sqlite3
+import uuid
 from datetime import datetime
 
 from .database import init_db, get_db
@@ -53,15 +54,31 @@ def shutdown():
 
 @app.get('/', response_class=HTMLResponse)
 def index(request: Request, region: str = '', distance: str = '', pref: str = ''):
+    # 訪問者IDの取得（管理者は常に'admin'）
+    if is_admin(request):
+        visitor_id = 'admin'
+        new_visitor_id = None
+    else:
+        visitor_id = request.cookies.get('visitor_id')
+        if not visitor_id:
+            visitor_id = str(uuid.uuid4())
+            new_visitor_id = visitor_id
+        else:
+            new_visitor_id = None
+
     db = get_db()
     query = '''
-        SELECT e.*, p.status, p.memo, p.finish_time, p.by_admin, p.id as progress_id
+        SELECT e.*,
+            ap.status as admin_status, ap.finish_time as admin_finish_time,
+            vp.status as visitor_status, vp.memo as visitor_memo,
+            vp.finish_time as visitor_finish_time, vp.id as progress_id
         FROM events e
-        LEFT JOIN user_progress p ON e.id = p.event_id
+        LEFT JOIN user_progress ap ON e.id = ap.event_id AND ap.visitor_id = 'admin'
+        LEFT JOIN user_progress vp ON e.id = vp.event_id AND vp.visitor_id = ?
         WHERE e.confirmed = 1
         AND e.date >= date('now', '-1 year', 'localtime')
     '''
-    params = []
+    params = [visitor_id]
     if region:
         query += ' AND e.region = ?'
         params.append(region)
@@ -108,7 +125,7 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         events.append(ev_dict)
 
     db.close()
-    return templates.TemplateResponse('index.html', {
+    response = templates.TemplateResponse('index.html', {
         'request': request,
         'events': events,
         'prefs': prefs,
@@ -119,6 +136,9 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         'gcal_url': gcal_url,
         'is_admin': is_admin(request),
     })
+    if new_visitor_id:
+        response.set_cookie('visitor_id', new_visitor_id, max_age=60*60*24*365*10, httponly=True)
+    return response
 
 def make_ical(events, title='Oh!マラソンカレンダー'):
     lines = [
@@ -188,19 +208,24 @@ def my_calendar_ics():
 
 @app.post('/progress/{event_id}')
 def update_progress(request: Request, event_id: int, status: str = Form(''), memo: str = Form(''), finish_time: str = Form('')):
-    admin = 1 if is_admin(request) else 0
-    db = get_db()
-    existing = db.execute('SELECT id, by_admin FROM user_progress WHERE event_id = ?', (event_id,)).fetchone()
-    if existing:
-        # 管理者は常に上書き。一般ユーザーは管理者が入力済みの場合はby_adminを維持
-        new_by_admin = admin if admin else existing['by_admin']
-        db.execute('''
-            UPDATE user_progress SET status=?, memo=?, finish_time=?, by_admin=?, updated_at=datetime('now','localtime')
-            WHERE event_id=?
-        ''', (status, memo, finish_time, new_by_admin, event_id))
+    if is_admin(request):
+        visitor_id = 'admin'
+        by_admin = 1
     else:
-        db.execute('INSERT INTO user_progress (event_id, status, memo, finish_time, by_admin) VALUES (?, ?, ?, ?, ?)',
-                   (event_id, status, memo, finish_time, admin))
+        visitor_id = request.cookies.get('visitor_id')
+        if not visitor_id:
+            return RedirectResponse('/', status_code=303)
+        by_admin = 0
+    db = get_db()
+    existing = db.execute('SELECT id FROM user_progress WHERE event_id = ? AND visitor_id = ?', (event_id, visitor_id)).fetchone()
+    if existing:
+        db.execute('''
+            UPDATE user_progress SET status=?, memo=?, finish_time=?, updated_at=datetime('now','localtime')
+            WHERE event_id=? AND visitor_id=?
+        ''', (status, memo, finish_time, event_id, visitor_id))
+    else:
+        db.execute('INSERT INTO user_progress (event_id, status, memo, finish_time, by_admin, visitor_id) VALUES (?, ?, ?, ?, ?, ?)',
+                   (event_id, status, memo, finish_time, by_admin, visitor_id))
     db.commit()
     db.close()
     return RedirectResponse('/', status_code=303)

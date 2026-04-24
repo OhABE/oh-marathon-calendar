@@ -49,10 +49,14 @@ def init_db():
     for col_def in [
         'ALTER TABLE events ADD COLUMN youtube_url TEXT',
         'ALTER TABLE events ADD COLUMN youtube_locked INTEGER DEFAULT 0',
+        "ALTER TABLE user_progress ADD COLUMN visitor_id TEXT DEFAULT 'admin'",
     ]:
         try:
             conn.execute(col_def)
             conn.commit()
         except Exception:
             pass
+    # 既存レコードを管理者レコードとして明示
+    conn.execute("UPDATE user_progress SET visitor_id = 'admin' WHERE visitor_id IS NULL")
+    conn.commit()
     conn.close()
