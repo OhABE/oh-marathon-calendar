@@ -45,6 +45,14 @@ def init_db():
 
     ''')
     conn.commit()
+    conn.executescript('''
+        CREATE TABLE IF NOT EXISTS visitor_log (
+            date TEXT NOT NULL,
+            visitor_id TEXT NOT NULL,
+            PRIMARY KEY (date, visitor_id)
+        );
+    ''')
+    conn.commit()
     # Migration: add columns to existing DBs
     for col_def in [
         'ALTER TABLE events ADD COLUMN youtube_url TEXT',

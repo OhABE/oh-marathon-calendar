@@ -105,6 +105,18 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
             new_visitor_id = None
 
     db = get_db()
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    # 訪問者ログを記録（管理者は除外）
+    if visitor_id != 'admin':
+        try:
+            db.execute('INSERT OR IGNORE INTO visitor_log (date, visitor_id) VALUES (?, ?)', (today, visitor_id))
+            db.commit()
+        except Exception:
+            pass
+    total_visitors = db.execute('SELECT COUNT(*) FROM visitor_log').fetchone()[0]
+    today_visitors = db.execute('SELECT COUNT(*) FROM visitor_log WHERE date = ?', (today,)).fetchone()[0]
+
     query = '''
         SELECT e.*,
             ap.status as admin_status, ap.finish_time as admin_finish_time,
@@ -132,8 +144,6 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
     query += ' ORDER BY e.date ASC'
     events_raw = db.execute(query, params).fetchall()
     prefs = db.execute('SELECT DISTINCT prefecture, region FROM events ORDER BY region, prefecture').fetchall()
-
-    today = datetime.now().strftime('%Y-%m-%d')
 
     def gcal_url(ev):
         date = (ev.get('date') or '').replace('-', '')
@@ -173,6 +183,8 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         'today': today,
         'gcal_url': gcal_url,
         'is_admin': is_admin(request),
+        'total_visitors': total_visitors,
+        'today_visitors': today_visitors,
     })
     if new_visitor_id:
         response.set_cookie('visitor_id', new_visitor_id, max_age=60*60*24*365*10, httponly=True)
