@@ -50,6 +50,8 @@ header h1 { font-size: 2rem; font-weight: 900; letter-spacing: 1px; }
 .btn-add:hover { background: #c73278; }
 .btn-scrape { background: #ff6b35; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
 .btn-scrape:hover { background: #e5541f; }
+.btn-clear { background: #888; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
+.btn-clear:hover { background: #c00; }
 .btn-reset { background: #eee; color: #555; border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; text-decoration: none; display: inline-block; }
 .btn-save { background: #4caf50; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: bold; white-space: nowrap; }
 .btn-save:hover { background: #388e3c; }

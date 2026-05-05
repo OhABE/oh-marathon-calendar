@@ -16,7 +16,7 @@ ALL_PREFS = {**CHUGOKU_PREFS, **KYUSHU_PREFS}
 
 WHEELCHAIR_KEYWORDS = ['車いす', '車椅子', 'wheelchair', 'チェア', 'ウォーク', 'ウオーク', '歩こう',
                        '練習会', 'ジョギング', 'ファンラン', 'ファン・ラン', '駅伝', 'タイムトライアル',
-                       '記録会', 'クロスカントリー', 'ロゲイニング']
+                       '記録会', 'クロスカントリー', 'ロゲイニング', 'マラニック', '健康ラン']
 TRAIL_KEYWORDS = ['トレイル', 'trail', 'Trail', 'TRAIL', '山岳', '縦走']
 ULTRA_KEYWORDS = ['ウルトラ', 'ultra', 'Ultra', 'ULTRA']
 RELAY_KEYWORDS = ['リレー', 'relay', 'Relay', 'RELAY']

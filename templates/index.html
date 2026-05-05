@@ -54,6 +54,7 @@
       {% if is_admin %}
       <button onclick="openAddModal()" class="btn-add">＋ 大会を追加</button>
       <button onclick="runScrape()" class="btn-scrape">🔄 自動取得</button>
+      <button onclick="clearAllEvents()" class="btn-clear">🗑 全件削除</button>
       <form method="post" action="/admin/logout" style="display:inline;">
         <button type="submit" class="btn-logout">🔓 ログアウト</button>
       </form>

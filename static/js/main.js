@@ -52,6 +52,14 @@ function closeEditModal() {
   document.getElementById('editOverlay').style.display = 'none';
 }
 
+function clearAllEvents() {
+  if (!confirm('全大会データを削除します。よろしいですか？')) return;
+  fetch('/admin/events/clear-all', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => { showToast(data.message); setTimeout(() => location.reload(), 1500); })
+    .catch(() => showToast('削除に失敗しました'));
+}
+
 function runScrape() {
   const btn = document.querySelector('.btn-scrape');
   btn.textContent = '取得中...';

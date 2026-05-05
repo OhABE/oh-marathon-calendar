@@ -137,6 +137,11 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         AND e.name NOT LIKE '%記録会%'
         AND e.name NOT LIKE '%クロスカントリー%'
         AND e.name NOT LIKE '%ロゲイニング%'
+        AND e.name NOT LIKE '%マラニック%'
+        AND e.name NOT LIKE '%ウォーク%'
+        AND e.name NOT LIKE '%歩こう%'
+        AND e.name NOT LIKE '%健康%'
+        AND e.distance IN ('フル', 'ハーフ', 'ウルトラ', 'トレイル', 'リレー')
     '''
     params = [visitor_id]
     if region:
@@ -379,6 +384,17 @@ def delete_event(request: Request, event_id: int):
     db.commit()
     db.close()
     return RedirectResponse('/', status_code=303)
+
+@app.post('/admin/events/clear-all')
+def clear_all_events(request: Request):
+    if not is_admin(request):
+        return JSONResponse({'error': '管理者のみ操作できます'}, status_code=403)
+    db = get_db()
+    db.execute('DELETE FROM user_progress')
+    db.execute('DELETE FROM events')
+    db.commit()
+    db.close()
+    return JSONResponse({'message': '全大会を削除しました'})
 
 @app.post('/scrape')
 def manual_scrape(request: Request):
