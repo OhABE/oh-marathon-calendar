@@ -74,34 +74,35 @@ def scrape_runnet_detail(detail_url):
         res = requests.get(detail_url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
 
-        # テーブルから情報を抽出
-        for row in soup.select('tr'):
-            cells = row.select('th, td')
-            if len(cells) < 2:
+        # li > p*2 構造からキーバリューを取得（ランネットの現行HTML形式）
+        for li in soup.select('li'):
+            ps = [c for c in li.children if getattr(c, 'name', None) == 'p']
+            if len(ps) < 2:
                 continue
-            key = cells[0].get_text(strip=True)
-            val = cells[1].get_text(strip=True)
+            key = ps[0].get_text(strip=True)
+            val = ps[1].get_text(strip=True)
 
-            if re.search(r'参加料|参加費|エントリー料', key):
-                info['fee'] = val
-            elif re.search(r'制限時間', key):
-                info['time_limit'] = val
-            elif re.search(r'エントリー.*開始|受付.*開始', key):
-                info['entry_start'] = parse_date(val)
-            elif re.search(r'エントリー.*締切|受付.*締切|申込.*締切', key):
-                info['entry_end'] = parse_date(val)
-            elif re.search(r'会場|開催場所|スタート地点', key):
-                if not info.get('venue'):
-                    info['venue'] = val
-            elif re.search(r'開催日|大会日|レース日', key):
-                if not info.get('date'):
-                    info['date'] = parse_date(val)
+            if re.search(r'^開催日', key) and not info.get('date'):
+                info['date'] = parse_date(val)
+            elif re.search(r'参加料|参加費|エントリー料', key):
+                m = re.search(r'[\d,]+円', val)
+                if m:
+                    info['fee'] = m.group(0)
+            elif re.search(r'エントリー期間|申込期間', key):
+                # "2026年4月20日 10:00～2026年5月20日 20:00"
+                parts = re.split(r'[〜～]', val)
+                if parts:
+                    info['entry_start'] = parse_date(parts[0])
+                if len(parts) > 1:
+                    info['entry_end'] = parse_date(parts[1])
+            elif re.search(r'スタート場所|開催場所|会場|開催地', key) and not info.get('venue'):
+                info['venue'] = val.split('ランテスNo')[0].strip()
 
-        # 参加費の整形
-        if 'fee' in info:
-            m = re.search(r'[\d,]+円', info['fee'])
-            if m:
-                info['fee'] = m.group(0)
+        # 制限時間はテキスト全体から正規表現で抽出（「制限時間：X時間」形式）
+        full_text = soup.get_text()
+        m = re.search(r'制限時間[：:]\s*(\d+時間(?:\d+分)?)', full_text)
+        if m:
+            info['time_limit'] = m.group(1)
 
     except Exception as e:
         print(f'[scraper] detail error {detail_url}: {e}')
@@ -222,6 +223,7 @@ def scrape_sportsentry():
 
 def save_events(events):
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     saved = 0
     for ev in events:
         if is_excluded(ev.get('name', '')):
