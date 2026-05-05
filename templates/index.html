@@ -70,8 +70,9 @@
   <section class="events-section">
     {% if events %}
     <div class="events-grid">
+      {% set ns = namespace(found=false) %}
       {% for ev in events %}
-      <div class="event-card entry-{{ ev.entry_status }} user-{{ ev.visitor_status or 'none' }}">
+      {% if not ns.found and ev.entry_status != 'finished' %}{% set ns.found = true %}<div id="next-event" class="event-card entry-{{ ev.entry_status }} user-{{ ev.visitor_status or 'none' }}">{% else %}<div class="event-card entry-{{ ev.entry_status }} user-{{ ev.visitor_status or 'none' }}">{% endif %}
 
         <!-- ステータスバー（一番上に大きく表示） -->
         <div class="entry-status-bar status-{{ ev.entry_status }}">
