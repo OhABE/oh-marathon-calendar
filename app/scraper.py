@@ -16,7 +16,11 @@ ALL_PREFS = {**CHUGOKU_PREFS, **KYUSHU_PREFS}
 
 WHEELCHAIR_KEYWORDS = ['車いす', '車椅子', 'wheelchair', 'チェア', 'ウォーク', 'ウオーク', '歩こう',
                        '練習会', 'ジョギング', 'ファンラン', 'ファン・ラン', '駅伝', 'タイムトライアル',
-                       '記録会', 'クロスカントリー', 'ロゲイニング', 'マラニック', '健康ラン']
+                       '記録会', 'クロスカントリー', 'ロゲイニング', 'マラニック', '健康ラン',
+                       '試走会', 'セミナー', 'RUN CLUB', 'ランクラブ', '変化走', '登拝',
+                       '枕投げ', '送迎バス', 'ナイトクラス', 'ビギナークラス', 'マラソンキャンプ',
+                       'スイム&ラン', 'スイムラン', 'ピクニックラン', 'ジャーニー',
+                       'クラス（', 'クラス】', 'RETRY', '駆け上がり', '参道']
 TRAIL_KEYWORDS = ['トレイル', 'trail', 'Trail', 'TRAIL', '山岳', '縦走']
 ULTRA_KEYWORDS = ['ウルトラ', 'ultra', 'Ultra', 'ULTRA']
 RELAY_KEYWORDS = ['リレー', 'relay', 'Relay', 'RELAY']
@@ -116,7 +120,7 @@ def scrape_runnet_detail(detail_url):
         print(f'[scraper] detail error {detail_url}: {e}')
     return info
 
-def _scrape_runnet_links(search_url, pref_name, pref_code, region, name_filter=None):
+def _scrape_runnet_links(search_url, pref_name, pref_code, region, name_filter=None, force_distance=None):
     """RunNET検索URLから大会リストを取得して返す"""
     events = []
     try:
@@ -139,12 +143,17 @@ def _scrape_runnet_links(search_url, pref_name, pref_code, region, name_filter=N
             detail_url = href if href.startswith('http') else 'https://runnet.jp' + href
             detail = scrape_runnet_detail(detail_url)
             time.sleep(1.5)
+            # 検索カテゴリが明示されている場合はそれを優先、名称で上書き可
+            distance = force_distance or detect_distance(name)
+            # ただしトレイル・ウルトラ・リレーは名称判定を優先
+            if detect_distance(name) in ('トレイル', 'ウルトラ', 'リレー'):
+                distance = detect_distance(name)
             ev = {
                 'name': name,
                 'date': detail.get('date', ''),
                 'prefecture': pref_name,
                 'region': region,
-                'distance': detect_distance(name),
+                'distance': distance,
                 'venue': detail.get('venue', ''),
                 'entry_start': detail.get('entry_start', ''),
                 'entry_end': detail.get('entry_end', ''),
@@ -167,13 +176,13 @@ def scrape_runnet():
     for pref_name, pref_code in ALL_PREFS.items():
         region = '中国' if pref_name in CHUGOKU_PREFS else '九州'
 
-        # フル・ハーフ
-        for dist_id in ['1', '2']:
+        # フル・ハーフ（RunNetのdistanceId=1がフル、2がハーフ）
+        for dist_id, dist_label in [('1', 'フル'), ('2', 'ハーフ')]:
             url = (
                 f'https://runnet.jp/entry/runtes/user/pc/RaceSearchZZSDetailAction.do'
                 f'?command=search&prefectureIds={pref_code}&distanceIds={dist_id}&statusIds=1&statusIds=2'
             )
-            events += _scrape_runnet_links(url, pref_name, pref_code, region)
+            events += _scrape_runnet_links(url, pref_name, pref_code, region, force_distance=dist_label)
 
         # ウルトラ・トレイル（名称でフィルタ）
         trail_url = (
