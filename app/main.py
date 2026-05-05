@@ -129,6 +129,14 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         LEFT JOIN user_progress vp ON e.id = vp.event_id AND vp.visitor_id = ?
         WHERE e.confirmed = 1
         AND e.date >= date('now', '-1 year', 'localtime')
+        AND e.name NOT LIKE '%練習会%'
+        AND e.name NOT LIKE '%ジョギング%'
+        AND e.name NOT LIKE '%ファンラン%'
+        AND e.name NOT LIKE '%駅伝%'
+        AND e.name NOT LIKE '%タイムトライアル%'
+        AND e.name NOT LIKE '%記録会%'
+        AND e.name NOT LIKE '%クロスカントリー%'
+        AND e.name NOT LIKE '%ロゲイニング%'
     '''
     params = [visitor_id]
     if region:

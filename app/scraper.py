@@ -14,7 +14,9 @@ CHUGOKU_PREFS = {'鳥取': '31', '島根': '32', '岡山': '33', '広島': '34',
 KYUSHU_PREFS  = {'福岡': '40', '佐賀': '41', '長崎': '42', '熊本': '43', '大分': '44', '宮崎': '45', '鹿児島': '46', '沖縄': '47'}
 ALL_PREFS = {**CHUGOKU_PREFS, **KYUSHU_PREFS}
 
-WHEELCHAIR_KEYWORDS = ['車いす', '車椅子', 'wheelchair', 'チェア', 'ウォーク', 'ウオーク', '歩こう']
+WHEELCHAIR_KEYWORDS = ['車いす', '車椅子', 'wheelchair', 'チェア', 'ウォーク', 'ウオーク', '歩こう',
+                       '練習会', 'ジョギング', 'ファンラン', 'ファン・ラン', '駅伝', 'タイムトライアル',
+                       '記録会', 'クロスカントリー', 'ロゲイニング']
 TRAIL_KEYWORDS = ['トレイル', 'trail', 'Trail', 'TRAIL', '山岳', '縦走']
 ULTRA_KEYWORDS = ['ウルトラ', 'ultra', 'Ultra', 'ULTRA']
 RELAY_KEYWORDS = ['リレー', 'relay', 'Relay', 'RELAY']
