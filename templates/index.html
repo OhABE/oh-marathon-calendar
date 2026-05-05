@@ -41,8 +41,6 @@
         <option value="フル" {% if selected_distance=='フル' %}selected{% endif %}>フルマラソン</option>
         <option value="ハーフ" {% if selected_distance=='ハーフ' %}selected{% endif %}>ハーフマラソン</option>
         <option value="ウルトラ" {% if selected_distance=='ウルトラ' %}selected{% endif %}>ウルトラマラソン</option>
-        <option value="トレイル" {% if selected_distance=='トレイル' %}selected{% endif %}>トレイルラン</option>
-        <option value="リレー" {% if selected_distance=='リレー' %}selected{% endif %}>リレーマラソン</option>
       </select>
       <select name="pref" onchange="this.form.submit()">
         <option value="">都道府県: すべて</option>
