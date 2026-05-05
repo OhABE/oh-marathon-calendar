@@ -16,15 +16,6 @@ from .scraper import run_scrape, seed_confirmed_data, update_youtube_links
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 ADMIN_PIN = os.environ.get('ADMIN_PIN', '0427')  # デフォルトは佐伯番匠の日
 
-import json as _json
-_ONSEN_BY_PREF: dict = {}
-try:
-    _onsen_path = os.path.join(BASE_DIR, 'data', 'onsen88.json')
-    _onsen_all = _json.load(open(_onsen_path, encoding='utf-8'))
-    for _o in _onsen_all:
-        _ONSEN_BY_PREF.setdefault(_o['prefecture'], []).append({'name': _o['name'], 'url': _o['url']})
-except Exception:
-    pass
 
 def is_admin(request: Request) -> bool:
     return request.cookies.get('admin_token') == ADMIN_PIN
@@ -178,7 +169,6 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
             ev_dict.get('date', ''),
             today
         )
-        ev_dict['onsen_list'] = _ONSEN_BY_PREF.get(ev_dict.get('prefecture', ''), [])
         events.append(ev_dict)
 
     db.close()

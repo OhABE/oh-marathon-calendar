@@ -231,12 +231,8 @@ header h1 { font-size: 2rem; font-weight: 900; letter-spacing: 1px; }
 .btn-cal:hover { background: #1558b0; }
 
 /* 九州八十八湯めぐり */
-.onsen-section { margin-top: 12px; background: #fff8f0; border: 1px solid #f0d9c0; border-radius: 8px; padding: 10px 14px; }
-.onsen-title { font-size: 0.82rem; font-weight: bold; color: #a0522d; margin-bottom: 6px; }
-.onsen-list { margin: 0; padding-left: 16px; }
-.onsen-list li { font-size: 0.8rem; margin-bottom: 3px; }
-.onsen-list li a { color: #bf5500; text-decoration: none; }
-.onsen-list li a:hover { text-decoration: underline; }
+.btn-onsen { display: block; margin-top: 8px; padding: 8px 14px; background: #fff3e0; border: 1px solid #f0c080; border-radius: 8px; color: #a0522d; font-size: 0.85rem; font-weight: bold; text-decoration: none; text-align: center; }
+.btn-onsen:hover { background: #ffe0b2; }
 
 /* Calendar modal */
 .cal-section { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee; }

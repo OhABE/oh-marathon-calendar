@@ -124,15 +124,11 @@
         {% endif %}
 
         <!-- 九州八十八湯めぐり -->
-        {% if ev.onsen_list %}
-        <div class="onsen-section">
-          <div class="onsen-title">♨️ 会場近くの九州八十八湯めぐり（{{ ev.prefecture }}）</div>
-          <ul class="onsen-list">
-            {% for onsen in ev.onsen_list %}
-            <li><a href="{{ onsen.url }}" target="_blank" rel="noopener">{{ onsen.name }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
+        {% set onsen_map = {'福岡':'fukuoka','佐賀':'saga','長崎':'nagasaki','大分':'oita','熊本':'kumamoto','宮崎':'miyazaki','鹿児島':'kagoshima'} %}
+        {% if onsen_map[ev.prefecture] is defined %}
+        <a href="https://www.88onsen.com/spot/index/t/31/category/{{ onsen_map[ev.prefecture] }}" target="_blank" rel="noopener" class="btn-onsen">
+          ♨️ 近くの九州八十八湯を探す
+        </a>
         {% endif %}
 
         <!-- Googleカレンダーに追加 -->
