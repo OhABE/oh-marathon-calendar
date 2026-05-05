@@ -40,7 +40,9 @@
         <option value="">距離: すべて</option>
         <option value="フル" {% if selected_distance=='フル' %}selected{% endif %}>フルマラソン</option>
         <option value="ハーフ" {% if selected_distance=='ハーフ' %}selected{% endif %}>ハーフマラソン</option>
-        <option value="その他" {% if selected_distance=='その他' %}selected{% endif %}>その他（ウルトラ・トレイルなど）</option>
+        <option value="ウルトラ" {% if selected_distance=='ウルトラ' %}selected{% endif %}>ウルトラマラソン</option>
+        <option value="トレイル" {% if selected_distance=='トレイル' %}selected{% endif %}>トレイルラン</option>
+        <option value="リレー" {% if selected_distance=='リレー' %}selected{% endif %}>リレーマラソン</option>
       </select>
       <select name="pref" onchange="this.form.submit()">
         <option value="">都道府県: すべて</option>
@@ -111,10 +113,8 @@
         <div class="event-meta">
           <div class="meta-item">📅 <strong>{{ ev.date }}</strong></div>
           <div class="meta-item">📍 {{ ev.prefecture }}{% if ev.venue %} / {{ ev.venue }}{% endif %}</div>
-          {% if ev.time_limit %}<div class="meta-item">⏱ 制限時間: <strong>{{ ev.time_limit }}</strong></div>{% endif %}
           {% if ev.entry_start %}<div class="meta-item">📬 エントリー開始: {{ ev.entry_start }}</div>{% endif %}
           {% if ev.entry_end %}<div class="meta-item">⏰ エントリー締切: {{ ev.entry_end }}</div>{% endif %}
-          {% if ev.fee %}<div class="meta-item">💴 参加費: {{ ev.fee }}</div>{% endif %}
         </div>
 
         <!-- 申し込みサイト表示（リンクなし） -->
@@ -219,6 +219,7 @@
           <option value="ハーフ">ハーフマラソン</option>
           <option value="ウルトラ">ウルトラマラソン</option>
           <option value="トレイル">トレイルラン</option>
+          <option value="リレー">リレーマラソン</option>
           <option value="その他">その他</option>
         </select>
       </label>
@@ -278,6 +279,7 @@
           <option value="ハーフ">ハーフマラソン</option>
           <option value="ウルトラ">ウルトラマラソン</option>
           <option value="トレイル">トレイルラン</option>
+          <option value="リレー">リレーマラソン</option>
           <option value="その他">その他</option>
         </select>
       </label>

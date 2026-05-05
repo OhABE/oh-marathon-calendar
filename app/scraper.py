@@ -17,6 +17,7 @@ ALL_PREFS = {**CHUGOKU_PREFS, **KYUSHU_PREFS}
 WHEELCHAIR_KEYWORDS = ['車いす', '車椅子', 'wheelchair', 'チェア', 'ウォーク', 'ウオーク', '歩こう']
 TRAIL_KEYWORDS = ['トレイル', 'trail', 'Trail', 'TRAIL', '山岳', '縦走']
 ULTRA_KEYWORDS = ['ウルトラ', 'ultra', 'Ultra', 'ULTRA']
+RELAY_KEYWORDS = ['リレー', 'relay', 'Relay', 'RELAY']
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -35,18 +36,23 @@ def is_ultra(name):
 def is_trail_or_ultra(name):
     return is_trail(name) or is_ultra(name)
 
+def is_relay(name):
+    return any(kw in name for kw in RELAY_KEYWORDS)
+
 def detect_distance(name):
     if is_trail(name):
         return 'トレイル'
     if is_ultra(name):
         return 'ウルトラ'
+    if is_relay(name):
+        return 'リレー'
     if 'ハーフ' in name:
         return 'ハーフ'
     return 'フル'
 
 def is_confirmed(ev):
     """必須項目が揃っていて要確認でないイベントのみ確定とする"""
-    required = ['name', 'date', 'fee', 'time_limit']
+    required = ['name', 'date']
     for field in required:
         val = ev.get(field, '')
         if not val or '要確認' in str(val) or val.strip() == '':

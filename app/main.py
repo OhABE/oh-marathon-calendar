@@ -139,11 +139,8 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         query += ' AND e.region = ?'
         params.append(region)
     if distance:
-        if distance == 'その他':
-            query += " AND e.distance NOT IN ('フル', 'ハーフ')"
-        else:
-            query += ' AND e.distance = ?'
-            params.append(distance)
+        query += ' AND e.distance = ?'
+        params.append(distance)
     if pref:
         query += ' AND e.prefecture = ?'
         params.append(pref)
@@ -157,7 +154,7 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
             return '#'
         name = ev.get('name', '')
         loc = ev.get('venue') or ev.get('prefecture') or ''
-        details = f"距離: {ev.get('distance','')} / 参加費: {ev.get('fee','')} / 制限時間: {ev.get('time_limit','')}"
+        details = f"距離: {ev.get('distance','')}"
         from urllib.parse import quote
         return (
             f"https://calendar.google.com/calendar/render?action=TEMPLATE"
@@ -215,8 +212,6 @@ def make_ical(events, title='Oh!マラソンカレンダー'):
         location = ev.get('venue') or ev.get('prefecture') or ''
         desc_parts = []
         if ev.get('distance'):   desc_parts.append(f"距離: {ev['distance']}")
-        if ev.get('fee'):        desc_parts.append(f"参加費: {ev['fee']}")
-        if ev.get('time_limit'): desc_parts.append(f"制限時間: {ev['time_limit']}")
         if ev.get('entry_end'):  desc_parts.append(f"エントリー締切: {ev['entry_end']}")
         if ev.get('url'):        desc_parts.append(f"公式サイト: {ev['url']}")
         description = '\\n'.join(desc_parts)
