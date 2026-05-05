@@ -92,7 +92,6 @@
         <div class="abe-badge">
           {% if ev.entry_status == 'finished' or ev.admin_status == 'finished' %}📺 Oh!アベチャンネル 参加済み
           {% elif ev.admin_status == 'lottery' %}🎰 Oh!アベチャンネル 抽選待ち
-          {% elif ev.admin_status == 'running' %}🏃 Oh!アベチャンネル 参加中
           {% else %}🏁 Oh!アベチャンネル 参加予定{% endif %}
         </div>
         {% endif %}
@@ -130,11 +129,6 @@
           ♨️ 九州88湯めぐり（近くの温泉を探す）
         </a>
         {% endif %}
-
-        <!-- Googleカレンダーに追加 -->
-        <a href="{{ gcal_url(ev) }}" target="_blank" rel="noopener" class="btn-gcal">
-          📅 Googleカレンダーに追加
-        </a>
 
         <!-- 関連動画（一致した場合のみ表示） -->
         {% if ev.youtube_url %}
@@ -176,7 +170,6 @@
               <option value="entered" {% if ev.visitor_status=='entered' %}selected{% endif %}>✅ エントリー済み</option>
               <option value="lottery" {% if ev.visitor_status=='lottery' %}selected{% endif %}>🎰 抽選待ち</option>
               <option value="planning" {% if ev.visitor_status=='planning' %}selected{% endif %}>🏁 参加予定</option>
-              <option value="running" {% if ev.visitor_status=='running' %}selected{% endif %}>🏃 参加中</option>
               <option value="finished" {% if ev.visitor_status=='finished' %}selected{% endif %}>🏆 完走！</option>
               <option value="dns" {% if ev.visitor_status=='dns' %}selected{% endif %}>😢 欠場・途中棄権</option>
             </select>
