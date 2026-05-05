@@ -123,6 +123,18 @@
         </div>
         {% endif %}
 
+        <!-- 九州八十八湯めぐり -->
+        {% if ev.onsen_list %}
+        <div class="onsen-section">
+          <div class="onsen-title">♨️ 会場近くの九州八十八湯めぐり（{{ ev.prefecture }}）</div>
+          <ul class="onsen-list">
+            {% for onsen in ev.onsen_list %}
+            <li><a href="{{ onsen.url }}" target="_blank" rel="noopener">{{ onsen.name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
         <!-- Googleカレンダーに追加 -->
         <a href="{{ gcal_url(ev) }}" target="_blank" rel="noopener" class="btn-gcal">
           📅 Googleカレンダーに追加
