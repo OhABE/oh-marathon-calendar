@@ -327,13 +327,15 @@ footer { text-align: center; padding: 24px; color: #aaa; font-size: 0.8rem; marg
 
 /* Responsive */
 @media (max-width: 600px) {
-  .calendar-section { padding: 4px 2px; }
-  .cal-weekdays { gap: 1px; }
-  .cal-days { gap: 1px; }
-  .cal-weekday { font-size: 0.72rem; padding: 4px 0; }
-  .cal-day { min-height: 56px; padding: 2px 1px; border-radius: 2px; border-width: 0; background: #f5f5f5; }
+  .calendar-section { padding: 4px 0; overflow: hidden; }
+  .cal-weekdays { gap: 0; border-bottom: 1px solid #ddd; }
+  .cal-weekday { font-size: 0.72rem; padding: 5px 0; border-right: 1px solid #ddd; }
+  .cal-weekday:last-child { border-right: none; }
+  .cal-days { gap: 0; }
+  .cal-day { min-height: 56px; padding: 2px 2px; border-radius: 0; border-width: 0; border-right: 1px solid #eee; border-bottom: 1px solid #eee; background: white; }
+  .cal-day:nth-child(7n) { border-right: none; }
   .cal-day.today { background: #fff0f6; }
-  .cal-day.other-month { background: #ebebeb; }
+  .cal-day.other-month { background: #f7f7f7; }
   .cal-date { font-size: 0.72rem; }
   .cal-event { font-size: 0.55rem; padding: 1px 2px; margin-bottom: 1px; }
   header h1 { font-size: 1.5rem; }
