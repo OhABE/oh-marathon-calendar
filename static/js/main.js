@@ -81,10 +81,8 @@ function showToast(msg) {
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-// 直近の大会までスクロール
+// 直近の大会を最初から表示
 window.addEventListener('DOMContentLoaded', () => {
   const next = document.getElementById('next-event');
-  if (next) {
-    setTimeout(() => next.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
-  }
+  if (next) next.scrollIntoView({ behavior: 'instant', block: 'start' });
 });
