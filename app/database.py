@@ -53,6 +53,16 @@ def init_db():
         );
     ''')
     conn.commit()
+    conn.executescript('''
+        CREATE TABLE IF NOT EXISTS event_blacklist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            norm_name TEXT NOT NULL,
+            date TEXT NOT NULL,
+            prefecture TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now', 'localtime'))
+        );
+    ''')
+    conn.commit()
     # Migration: add columns to existing DBs
     for col_def in [
         'ALTER TABLE events ADD COLUMN youtube_url TEXT',

@@ -14,8 +14,8 @@ CHUGOKU_PREFS = {'鳥取': '31', '島根': '32', '岡山': '33', '広島': '34',
 KYUSHU_PREFS  = {'福岡': '40', '佐賀': '41', '長崎': '42', '熊本': '43', '大分': '44', '宮崎': '45', '鹿児島': '46', '沖縄': '47'}
 ALL_PREFS = {**CHUGOKU_PREFS, **KYUSHU_PREFS}
 
-WHEELCHAIR_KEYWORDS = ['車いす', '車椅子', 'wheelchair', 'チェア', 'ウォーク', 'ウオーク', '歩こう',
-                       '練習会', 'ジョギング', 'ファンラン', 'ファン・ラン', '駅伝', 'タイムトライアル',
+WHEELCHAIR_KEYWORDS = ['車いす', '車椅子', 'wheelchair', 'チェア', 'ウォーキング', 'ウォーク', 'ウオーク', '歩こう',
+                       '練習会', 'ジョギング', 'ファンラン', 'ファン・ラン', '駅伝', 'EKIDEN', 'Ekiden', 'ekiden', 'タイムトライアル',
                        '記録会', 'クロスカントリー', 'ロゲイニング', 'マラニック', '健康ラン',
                        '試走会', 'セミナー', 'RUN CLUB', 'ランクラブ', '変化走', '登拝',
                        '枕投げ', '送迎バス', 'ナイトクラス', 'ビギナークラス', 'マラソンキャンプ',
@@ -46,16 +46,21 @@ def is_trail_or_ultra(name):
 def is_relay(name):
     return any(kw in name for kw in RELAY_KEYWORDS)
 
-def detect_distance(name):
-    if is_trail(name):
-        return 'トレイル'
-    if is_ultra(name):
-        return 'ウルトラ'
-    if is_relay(name):
-        return 'リレー'
-    if 'ハーフ' in name:
-        return 'ハーフ'
-    return 'フル'
+def detect_distance(name, force_distance=None):
+    if is_trail(name): return 'トレイル'
+    if is_ultra(name): return 'ウルトラ'
+    if is_relay(name): return 'リレー'
+    # 名称中の明示的なkm数で判定
+    m = re.search(r'(\d+(?:\.\d+)?)\s*(?:km|キロ|㎞)', name, re.IGNORECASE)
+    if m:
+        km = float(m.group(1))
+        if 40 <= km <= 43: return 'フル'
+        if 19 <= km <= 22: return 'ハーフ'
+        return f'{int(km)}km'
+    if 'フルマラソン' in name: return 'フル'
+    if 'ハーフマラソン' in name or 'ハーフ' in name: return 'ハーフ'
+    # RunNetカテゴリを使用、なければその他
+    return force_distance or 'その他'
 
 def normalize_name(name):
     """重複判定用：ふりがな・括弧・空白・記号を除去して正規化"""
@@ -152,11 +157,8 @@ def _scrape_runnet_links(search_url, pref_name, pref_code, region, name_filter=N
             detail_url = href if href.startswith('http') else 'https://runnet.jp' + href
             detail = scrape_runnet_detail(detail_url)
             time.sleep(1.5)
-            # 検索カテゴリが明示されている場合はそれを優先、名称で上書き可
-            distance = force_distance or detect_distance(name)
-            # ただしトレイル・ウルトラ・リレーは名称判定を優先
-            if detect_distance(name) in ('トレイル', 'ウルトラ', 'リレー'):
-                distance = detect_distance(name)
+            # 名称から距離を判定（RunNetカテゴリは信頼しない）
+            distance = detect_distance(name)
             ev = {
                 'name': name,
                 'date': detail.get('date', ''),
@@ -257,6 +259,13 @@ def save_events(events):
         # 手動データに confirmed キーがあればそれを優先
         confirmed = ev.get('confirmed', 1 if is_confirmed(ev) else 0)
         norm = normalize_name(ev.get('name', ''))
+        # ブラックリストチェック（管理者が削除した大会は再登録しない）
+        blacklisted = conn.execute(
+            'SELECT 1 FROM event_blacklist WHERE norm_name=? AND date=? AND prefecture=?',
+            (norm, ev.get('date', ''), ev.get('prefecture', ''))
+        ).fetchone()
+        if blacklisted:
+            continue
         candidates = conn.execute(
             'SELECT id, confirmed, name FROM events WHERE date=? AND prefecture=?',
             (ev['date'], ev.get('prefecture', ''))

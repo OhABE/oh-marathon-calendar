@@ -8,7 +8,8 @@ import re
 import sqlite3
 import uuid
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
+import json
 
 from .database import init_db, get_db
 from .scraper import run_scrape, seed_confirmed_data, update_youtube_links
@@ -84,7 +85,8 @@ def startup():
     scheduler.add_job(run_scrape,          'cron', hour=0, minute=0)
     scheduler.add_job(cleanup_old_editions,'cron', hour=0, minute=10)
     scheduler.add_job(update_youtube_links,'cron', hour=0, minute=30)
-    scheduler.add_job(update_youtube_links, 'date', run_date=datetime.now())
+    scheduler.add_job(run_scrape,          'date', run_date=datetime.now())
+    scheduler.add_job(update_youtube_links, 'date', run_date=datetime.now() + timedelta(minutes=40))
     scheduler.start()
 
 @app.on_event('shutdown')
@@ -133,11 +135,14 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         AND e.name NOT LIKE '%ジョギング%'
         AND e.name NOT LIKE '%ファンラン%'
         AND e.name NOT LIKE '%駅伝%'
+        AND e.name NOT LIKE '%EKIDEN%'
+        AND e.name NOT LIKE '%Ekiden%'
         AND e.name NOT LIKE '%タイムトライアル%'
         AND e.name NOT LIKE '%記録会%'
         AND e.name NOT LIKE '%クロスカントリー%'
         AND e.name NOT LIKE '%ロゲイニング%'
         AND e.name NOT LIKE '%マラニック%'
+        AND e.name NOT LIKE '%ウォーキング%'
         AND e.name NOT LIKE '%ウォーク%'
         AND e.name NOT LIKE '%歩こう%'
         AND e.name NOT LIKE '%健康%'
@@ -208,9 +213,14 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         events.append(ev_dict)
 
     db.close()
+    events_json = json.dumps(
+        [{'name': e['name'], 'date': e['date'], 'distance': e['distance'], 'url': e['url'] or ''} for e in events],
+        ensure_ascii=False
+    )
     response = templates.TemplateResponse('index.html', {
         'request': request,
         'events': events,
+        'events_json': events_json,
         'prefs': prefs,
         'selected_region': region,
         'selected_distance': distance,
@@ -402,6 +412,14 @@ def delete_event(request: Request, event_id: int):
     if not is_admin(request):
         return RedirectResponse('/', status_code=303)
     db = get_db()
+    ev = db.execute('SELECT name, date, prefecture FROM events WHERE id = ?', (event_id,)).fetchone()
+    if ev:
+        from .scraper import normalize_name
+        norm = normalize_name(ev['name'])
+        db.execute(
+            'INSERT OR IGNORE INTO event_blacklist (norm_name, date, prefecture) VALUES (?, ?, ?)',
+            (norm, ev['date'], ev['prefecture'])
+        )
     db.execute('DELETE FROM user_progress WHERE event_id = ?', (event_id,))
     db.execute('DELETE FROM events WHERE id = ?', (event_id,))
     db.commit()

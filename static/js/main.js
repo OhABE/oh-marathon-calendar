@@ -81,8 +81,109 @@ function showToast(msg) {
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-// 直近の大会を最初から表示
+// 直近の大会を最初から表示（リスト表示時のみ）
 window.addEventListener('DOMContentLoaded', () => {
   const next = document.getElementById('next-event');
   if (next) next.scrollIntoView({ behavior: 'instant', block: 'start' });
 });
+
+// ── カレンダービュー ───────────────────────────────
+let calYear, calMonth;
+
+function toggleView(view) {
+  const listView = document.getElementById('listView');
+  const calView  = document.getElementById('calendarView');
+  const btnList  = document.getElementById('btnListView');
+  const btnCal   = document.getElementById('btnCalView');
+  if (view === 'cal') {
+    listView.style.display = 'none';
+    calView.style.display  = 'block';
+    btnList.classList.remove('active');
+    btnCal.classList.add('active');
+    if (calYear === undefined) initCalendar();
+    else renderCalendar();
+  } else {
+    listView.style.display = 'block';
+    calView.style.display  = 'none';
+    btnList.classList.add('active');
+    btnCal.classList.remove('active');
+  }
+}
+
+function initCalendar() {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const upcoming = (typeof EVENTS_JSON !== 'undefined') &&
+    EVENTS_JSON.find(e => e.date && e.date >= todayStr);
+  if (upcoming) {
+    const d = new Date(upcoming.date + 'T00:00:00');
+    calYear  = d.getFullYear();
+    calMonth = d.getMonth();
+  } else {
+    calYear  = today.getFullYear();
+    calMonth = today.getMonth();
+  }
+  renderCalendar();
+}
+
+function changeMonth(delta) {
+  calMonth += delta;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  document.getElementById('calMonthTitle').textContent =
+    `${calYear}年${calMonth + 1}月`;
+
+  const todayStr   = new Date().toISOString().slice(0, 10);
+  const monthStr   = String(calMonth + 1).padStart(2, '0');
+  const firstDay   = new Date(calYear, calMonth, 1);
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const startDow   = firstDay.getDay();
+  const prevLast   = new Date(calYear, calMonth, 0).getDate();
+
+  // 日付ごとにイベントをまとめる
+  const evByDate = {};
+  if (typeof EVENTS_JSON !== 'undefined') {
+    EVENTS_JSON.forEach(ev => {
+      if (!ev.date) return;
+      if (!evByDate[ev.date]) evByDate[ev.date] = [];
+      evByDate[ev.date].push(ev);
+    });
+  }
+
+  const distClass = { 'フル':'dist-full','ハーフ':'dist-half','ウルトラ':'dist-ultra','トレイル':'dist-trail','リレー':'dist-relay' };
+
+  let html = '';
+
+  // 前月の余白
+  for (let i = 0; i < startDow; i++) {
+    html += `<div class="cal-day other-month"><span class="cal-date">${prevLast - startDow + i + 1}</span></div>`;
+  }
+
+  // 当月の日付
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${monthStr}-${String(d).padStart(2, '0')}`;
+    const isToday = dateStr === todayStr;
+    const dow = (startDow + d - 1) % 7;
+    const cls = ['cal-day', isToday ? 'today' : '', dow === 0 ? 'sun' : dow === 6 ? 'sat' : ''].filter(Boolean).join(' ');
+    html += `<div class="${cls}"><span class="cal-date">${d}</span>`;
+    (evByDate[dateStr] || []).forEach(ev => {
+      const dc = distClass[ev.distance] || 'dist-other';
+      const name = ev.name.length > 13 ? ev.name.slice(0, 13) + '…' : ev.name;
+      html += `<a href="${ev.url || '#'}" target="_blank" class="cal-event ${dc}" title="${ev.name}">${name}</a>`;
+    });
+    html += '</div>';
+  }
+
+  // 次月の余白
+  const total = startDow + daysInMonth;
+  const remain = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= remain; d++) {
+    html += `<div class="cal-day other-month"><span class="cal-date">${d}</span></div>`;
+  }
+
+  document.getElementById('calDays').innerHTML = html;
+}
