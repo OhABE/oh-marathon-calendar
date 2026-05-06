@@ -249,7 +249,18 @@
         </select>
       </label>
       <label>距離 *
-        <input type="text" name="distance" list="distance-list" placeholder="フル / ハーフ / 30km など" required>
+        <select name="distance" required>
+          <option value="フル">フルマラソン (42km)</option>
+          <option value="ハーフ">ハーフマラソン (21km)</option>
+          <option value="ウルトラ">ウルトラマラソン</option>
+          <option value="トレイル">トレイルラン</option>
+          <option value="リレー">リレーマラソン</option>
+          <option value="30km">30km</option>
+          <option value="20km">20km</option>
+          <option value="10km">10km</option>
+          <option value="5km">5km</option>
+          <option value="その他">その他</option>
+        </select>
       </label>
       <label>会場<input type="text" name="venue"></label>
       <label>エントリー開始日<input type="date" name="entry_start"></label>
@@ -302,7 +313,18 @@
         </select>
       </label>
       <label>距離 *
-        <input type="text" name="distance" id="edit_distance" list="distance-list" placeholder="フル / ハーフ / 30km など" required>
+        <select name="distance" id="edit_distance" required>
+          <option value="フル">フルマラソン (42km)</option>
+          <option value="ハーフ">ハーフマラソン (21km)</option>
+          <option value="ウルトラ">ウルトラマラソン</option>
+          <option value="トレイル">トレイルラン</option>
+          <option value="リレー">リレーマラソン</option>
+          <option value="30km">30km</option>
+          <option value="20km">20km</option>
+          <option value="10km">10km</option>
+          <option value="5km">5km</option>
+          <option value="その他">その他</option>
+        </select>
       </label>
       <label>会場<input type="text" name="venue" id="edit_venue"></label>
       <label>エントリー開始日<input type="date" name="entry_start" id="edit_entry_start"></label>
