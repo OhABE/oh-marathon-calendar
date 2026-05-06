@@ -82,11 +82,8 @@ def startup():
     db.close()
     if count == 0:
         seed_confirmed_data()
-    scheduler.add_job(run_scrape,          'cron', hour=0, minute=0)
     scheduler.add_job(cleanup_old_editions,'cron', hour=0, minute=10)
     scheduler.add_job(update_youtube_links,'cron', hour=0, minute=30)
-    scheduler.add_job(run_scrape,          'date', run_date=datetime.now())
-    scheduler.add_job(update_youtube_links, 'date', run_date=datetime.now() + timedelta(minutes=40))
     scheduler.start()
 
 @app.on_event('shutdown')

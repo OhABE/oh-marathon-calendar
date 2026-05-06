@@ -211,6 +211,18 @@
   </section>
 </main>
 
+<datalist id="distance-list">
+  <option value="フル">
+  <option value="ハーフ">
+  <option value="ウルトラ">
+  <option value="トレイル">
+  <option value="リレー">
+  <option value="10km">
+  <option value="20km">
+  <option value="30km">
+  <option value="その他">
+</datalist>
+
 <!-- 大会追加モーダル -->
 <div id="addModal" class="modal" style="display:none;">
   <div class="modal-inner">
@@ -237,14 +249,7 @@
         </select>
       </label>
       <label>距離 *
-        <select name="distance" required>
-          <option value="フル">フルマラソン</option>
-          <option value="ハーフ">ハーフマラソン</option>
-          <option value="ウルトラ">ウルトラマラソン</option>
-          <option value="トレイル">トレイルラン</option>
-          <option value="リレー">リレーマラソン</option>
-          <option value="その他">その他</option>
-        </select>
+        <input type="text" name="distance" list="distance-list" placeholder="フル / ハーフ / 30km など" required>
       </label>
       <label>会場<input type="text" name="venue"></label>
       <label>エントリー開始日<input type="date" name="entry_start"></label>
@@ -297,14 +302,7 @@
         </select>
       </label>
       <label>距離 *
-        <select name="distance" id="edit_distance" required>
-          <option value="フル">フルマラソン</option>
-          <option value="ハーフ">ハーフマラソン</option>
-          <option value="ウルトラ">ウルトラマラソン</option>
-          <option value="トレイル">トレイルラン</option>
-          <option value="リレー">リレーマラソン</option>
-          <option value="その他">その他</option>
-        </select>
+        <input type="text" name="distance" id="edit_distance" list="distance-list" placeholder="フル / ハーフ / 30km など" required>
       </label>
       <label>会場<input type="text" name="venue" id="edit_venue"></label>
       <label>エントリー開始日<input type="date" name="entry_start" id="edit_entry_start"></label>
