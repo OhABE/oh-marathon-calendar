@@ -158,6 +158,12 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         AND e.name NOT LIKE '%駆け上がり%'
         AND e.name NOT LIKE '%参道%'
         AND e.name NOT LIKE '%RETRY%'
+        AND e.name NOT LIKE '%クリテリウム%'
+        AND e.name NOT LIKE '%ツール・ド%'
+        AND e.name NOT LIKE '%サイクル%'
+        AND e.name NOT LIKE '%サイクリング%'
+        AND e.name NOT LIKE '%ヒルクライム%'
+        AND e.name NOT LIKE '%自転車%'
         AND e.distance IN ('フル', 'ハーフ', 'ウルトラ', 'トレイル', 'リレー')
     '''
     params = [visitor_id]
