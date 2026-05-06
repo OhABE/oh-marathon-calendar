@@ -57,6 +57,14 @@ def detect_distance(name):
         return 'ハーフ'
     return 'フル'
 
+def normalize_name(name):
+    """重複判定用：ふりがな・括弧・空白・記号を除去して正規化"""
+    n = re.sub(r'（[^）]*）', '', name)   # 全角括弧内を除去
+    n = re.sub(r'\([^)]*\)', '', n)       # 半角括弧内を除去
+    n = re.sub(r'[\s　]+', '', n)     # 空白・全角スペースを除去
+    n = n.replace('　', '')
+    return n.strip()
+
 def is_confirmed(ev):
     """必須項目が揃っていて要確認でないイベントのみ確定とする"""
     required = ['name', 'date']
@@ -248,10 +256,12 @@ def save_events(events):
             continue
         # 手動データに confirmed キーがあればそれを優先
         confirmed = ev.get('confirmed', 1 if is_confirmed(ev) else 0)
-        existing = conn.execute(
-            'SELECT id, confirmed FROM events WHERE name=? AND date=?',
-            (ev['name'], ev['date'])
-        ).fetchone()
+        norm = normalize_name(ev.get('name', ''))
+        candidates = conn.execute(
+            'SELECT id, confirmed, name FROM events WHERE date=? AND prefecture=?',
+            (ev['date'], ev.get('prefecture', ''))
+        ).fetchall()
+        existing = next((c for c in candidates if normalize_name(c['name']) == norm), None)
         if existing:
             # 既存レコードを情報更新（確定度が上がった場合）
             if confirmed and not existing['confirmed']:
