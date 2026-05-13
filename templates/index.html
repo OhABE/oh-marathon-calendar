@@ -227,11 +227,11 @@
 <div id="addModal" class="modal" style="display:none;">
   <div class="modal-inner">
     <h3>大会を追加</h3>
-    <form method="post" action="/events/add">
-      <label>大会名 *<input type="text" name="name" required></label>
-      <label>開催日 *<input type="date" name="date" required></label>
+    <form id="addForm" novalidate>
+      <label>大会名 *<input type="text" name="name" id="add_name"></label>
+      <label>開催日 *<input type="date" name="date" id="add_date"></label>
       <label>都道府県 *
-        <select name="prefecture" required>
+        <select name="prefecture" id="add_prefecture">
           <option value="">選択してください</option>
           <optgroup label="中国エリア">
             <option>鳥取</option><option>島根</option><option>岡山</option><option>広島</option><option>山口</option>
@@ -243,13 +243,13 @@
         </select>
       </label>
       <label>エリア *
-        <select name="region" required>
+        <select name="region">
           <option value="中国">中国</option>
           <option value="九州" selected>九州</option>
         </select>
       </label>
       <label>距離 *
-        <select name="distance" required>
+        <select name="distance">
           <option value="フル">フルマラソン (42km)</option>
           <option value="ハーフ">ハーフマラソン (21km)</option>
           <option value="ウルトラ">ウルトラマラソン</option>
@@ -279,7 +279,7 @@
         </select>
       </label>
       <div class="modal-buttons">
-        <button type="submit" class="btn-add">追加する</button>
+        <button type="button" onclick="submitAddForm()" class="btn-add" id="addSubmitBtn">追加する</button>
         <button type="button" onclick="closeAddModal()" class="btn-reset">キャンセル</button>
       </div>
     </form>
@@ -434,6 +434,6 @@ window.addEventListener('DOMContentLoaded', () => showToast('✅ 大会を追加
 window.addEventListener('DOMContentLoaded', () => showToast('✅ 大会情報を更新しました！'));
 {% endif %}
 </script>
-<script src="/static/js/main.js?v=5"></script>
+<script src="/static/js/main.js?v=6"></script>
 </body>
 </html>

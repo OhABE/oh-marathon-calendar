@@ -6,6 +6,34 @@ function closeAddModal() {
   document.getElementById('addModal').style.display = 'none';
   document.getElementById('overlay').style.display = 'none';
 }
+async function submitAddForm() {
+  const name = document.getElementById('add_name').value.trim();
+  const date = document.getElementById('add_date').value;
+  const prefecture = document.getElementById('add_prefecture').value;
+  if (!name) { showToast('大会名を入力してください'); return; }
+  if (!date) { showToast('開催日を入力してください'); return; }
+  if (!prefecture) { showToast('都道府県を選択してください'); return; }
+  const btn = document.getElementById('addSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '追加中...';
+  try {
+    const formData = new FormData(document.getElementById('addForm'));
+    const res = await fetch('/events/add', { method: 'POST', body: formData, redirect: 'follow' });
+    if (res.ok) {
+      closeAddModal();
+      document.getElementById('addForm').reset();
+      showToast('✅ 大会を追加しました！');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showToast('追加に失敗しました（' + res.status + '）');
+    }
+  } catch (e) {
+    showToast('通信エラーが発生しました');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '追加する';
+  }
+}
 function openPinModal() {
   document.getElementById('pinModal').style.display = 'block';
   document.getElementById('pinOverlay').style.display = 'block';
