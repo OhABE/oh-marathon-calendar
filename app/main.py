@@ -166,7 +166,7 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         AND e.name NOT LIKE '%サイクリング%'
         AND e.name NOT LIKE '%ヒルクライム%'
         AND e.name NOT LIKE '%自転車%'
-        AND e.distance IN ('フル', 'ハーフ', 'ウルトラ', 'トレイル', 'リレー')
+        AND (e.distance IN ('フル', 'ハーフ', 'ウルトラ', 'トレイル', 'リレー') OR e.source = 'manual')
     '''
     params = [visitor_id]
     if region:

@@ -18,11 +18,13 @@ async function submitAddForm() {
   btn.textContent = '追加中...';
   try {
     const formData = new FormData(document.getElementById('addForm'));
+    const addedDate = document.getElementById('add_date').value;
     const res = await fetch('/events/add', { method: 'POST', body: formData, redirect: 'follow' });
     if (res.ok) {
       closeAddModal();
       document.getElementById('addForm').reset();
       showToast('✅ 大会を追加しました！');
+      if (addedDate) sessionStorage.setItem('scroll_to_date', addedDate);
       setTimeout(() => location.reload(), 1500);
     } else {
       showToast('追加に失敗しました（' + res.status + '）');
@@ -109,8 +111,14 @@ function showToast(msg) {
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-// 直近の大会を最初から表示（リスト表示時のみ）
+// 直近の大会を最初から表示（追加直後は追加した大会へスクロール）
 window.addEventListener('DOMContentLoaded', () => {
+  const scrollDate = sessionStorage.getItem('scroll_to_date');
+  if (scrollDate) {
+    sessionStorage.removeItem('scroll_to_date');
+    const target = document.querySelector('[data-date="' + scrollDate + '"]');
+    if (target) { target.scrollIntoView({ behavior: 'instant', block: 'start' }); return; }
+  }
   const next = document.getElementById('next-event');
   if (next) next.scrollIntoView({ behavior: 'instant', block: 'start' });
 });
