@@ -267,8 +267,8 @@
       <label>エントリー締切日<input type="date" name="entry_end"></label>
       <label>参加費<input type="text" name="fee" placeholder="例: 5,000円"></label>
       <label>制限時間<input type="text" name="time_limit" placeholder="例: 6時間"></label>
-      <label>公式サイトURL<input type="url" name="url"></label>
-      <label>申し込みURL<input type="url" name="entry_url" placeholder="例: https://runnet.jp/..."></label>
+      <label>公式サイトURL<input type="text" name="url" placeholder="例: https://example.com/"></label>
+      <label>申し込みURL<input type="text" name="entry_url" placeholder="例: https://runnet.jp/..."></label>
       <label>申し込みサイト名
         <select name="entry_site">
           <option value="">選択してください</option>
@@ -331,8 +331,8 @@
       <label>エントリー締切日<input type="date" name="entry_end" id="edit_entry_end"></label>
       <label>参加費<input type="text" name="fee" id="edit_fee" placeholder="例: 5,000円"></label>
       <label>制限時間<input type="text" name="time_limit" id="edit_time_limit" placeholder="例: 6時間"></label>
-      <label>公式サイトURL<input type="url" name="url" id="edit_url"></label>
-      <label>申し込みURL<input type="url" name="entry_url" id="edit_entry_url" placeholder="例: https://runnet.jp/..."></label>
+      <label>公式サイトURL<input type="text" name="url" id="edit_url" placeholder="例: https://example.com/"></label>
+      <label>申し込みURL<input type="text" name="entry_url" id="edit_entry_url" placeholder="例: https://runnet.jp/..."></label>
       <label>申し込みサイト名
         <select name="entry_site" id="edit_entry_site">
           <option value="">選択してください</option>
@@ -428,6 +428,11 @@
 
 <script>
 const EVENTS_JSON = {{ events_json | safe }};
+{% if msg == 'added' %}
+window.addEventListener('DOMContentLoaded', () => showToast('✅ 大会を追加しました！'));
+{% elif msg == 'edited' %}
+window.addEventListener('DOMContentLoaded', () => showToast('✅ 大会情報を更新しました！'));
+{% endif %}
 </script>
 <script src="/static/js/main.js?v=5"></script>
 </body>

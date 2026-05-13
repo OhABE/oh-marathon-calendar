@@ -92,7 +92,7 @@ def shutdown():
 
 
 @app.get('/', response_class=HTMLResponse)
-def index(request: Request, region: str = '', distance: str = '', pref: str = ''):
+def index(request: Request, region: str = '', distance: str = '', pref: str = '', msg: str = ''):
     # 訪問者IDの取得（管理者は常に'admin'）
     if is_admin(request):
         visitor_id = 'admin'
@@ -227,6 +227,7 @@ def index(request: Request, region: str = '', distance: str = '', pref: str = ''
         'is_admin': is_admin(request),
         'total_visitors': total_visitors,
         'today_visitors': today_visitors,
+        'msg': msg,
     })
     if new_visitor_id:
         response.set_cookie('visitor_id', new_visitor_id, max_age=60*60*24*365*10, httponly=True)
@@ -336,10 +337,10 @@ def add_event(
     db.execute('''
         INSERT INTO events (name, date, prefecture, region, distance, venue, entry_start, entry_end, fee, time_limit, url, entry_url, entry_site, confirmed, source)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'manual')
-    ''', (name, date, prefecture, region, distance, venue, entry_start, entry_end, fee, time_limit, url, entry_url, entry_site))
+    ''', (name, date, prefecture, region, distance, venue, entry_start or None, entry_end or None, fee, time_limit, url, entry_url, entry_site))
     db.commit()
     db.close()
-    return RedirectResponse('/', status_code=303)
+    return RedirectResponse('/?msg=added', status_code=303)
 
 @app.post('/admin/login')
 def admin_login(pin: str = Form(...)):
@@ -402,7 +403,7 @@ def edit_event(
           event_id))
     db.commit()
     db.close()
-    return RedirectResponse('/', status_code=303)
+    return RedirectResponse('/?msg=edited', status_code=303)
 
 @app.post('/admin/events/{event_id}/delete')
 def delete_event(request: Request, event_id: int):
